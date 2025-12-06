@@ -3,12 +3,6 @@
   "compilerOptions": {
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "test/**/*", "scripts/**/*"],
-  "exclude": [
-    "generated",
-    "node_modules",
-    "dist",
-    "**/*.spec.ts",
-    "prisma/seeds"
-  ]
+  "include": ["src/**/*", "test/**/*", "scripts/**/*", "generated/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "prisma/seeds"]
 }
