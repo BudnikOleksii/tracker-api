@@ -1,14 +1,43 @@
+/* eslint-disable no-console */
 import { TransactionType } from '../../generated/prisma/enums';
 import { prisma } from './prisma';
+import { TransactionData } from './types';
 
-interface TransactionData {
-  Date: string;
-  Category: string;
-  Type: string;
-  Amount: number;
-  Currency: string;
-  Subcategory?: string;
-}
+const createCategory = async ({
+  userId,
+  name,
+  type,
+  parentCategoryId,
+}: {
+  userId: string;
+  name: string;
+  type: TransactionType;
+  parentCategoryId?: string;
+}) => {
+  const categoryLevel = parentCategoryId ? 'subcategory' : 'category';
+
+  const existingCategory = await prisma.category.findFirst({
+    where: { userId, name },
+  });
+
+  if (existingCategory) {
+    console.log(`📂 Found existing ${categoryLevel}: ${name}`);
+
+    return existingCategory;
+  } else {
+    const category = await prisma.category.create({
+      data: {
+        name,
+        type,
+        userId,
+        parentCategoryId,
+      },
+    });
+    console.log(`✅ Created ${categoryLevel}: ${name} (${type})`);
+
+    return category;
+  }
+};
 
 export const createCategories = async (
   userId: string,
@@ -34,63 +63,25 @@ export const createCategories = async (
     }
 
     if (transaction.Subcategory) {
-      categoryMap.get(categoryName)!.subcategories.add(transaction.Subcategory);
+      categoryMap.get(categoryName)?.subcategories.add(transaction.Subcategory);
     }
   });
 
   const createdCategories = new Map<string, string>(); // categoryName -> categoryId
   const createdSubcategories = new Map<string, string>(); // subcategoryName -> subcategoryId
 
-  // Create parent categories
   for (const [categoryName, { type, subcategories }] of categoryMap) {
-    const existingCategory = await prisma.category.findFirst({
-      where: {
-        userId,
-        name: categoryName,
-      },
-    });
-
-    let category;
-    if (existingCategory) {
-      category = existingCategory;
-      console.log(`📂 Found existing category: ${categoryName}`);
-    } else {
-      category = await prisma.category.create({
-        data: {
-          name: categoryName,
-          type,
-          userId,
-        },
-      });
-      console.log(`✅ Created category: ${categoryName} (${type})`);
-    }
+    const category = await createCategory({ userId, name: categoryName, type });
 
     createdCategories.set(categoryName, category.id);
 
-    // Create subcategories for this category
     for (const subcategoryName of subcategories) {
-      const existingSubcategory = await prisma.category.findFirst({
-        where: {
-          userId,
-          name: subcategoryName,
-        },
+      const subcategory = await createCategory({
+        userId,
+        name: subcategoryName,
+        type,
+        parentCategoryId: category.id,
       });
-
-      let subcategory;
-      if (existingSubcategory) {
-        subcategory = existingSubcategory;
-        console.log(`  📂 Found existing subcategory: ${subcategoryName}`);
-      } else {
-        subcategory = await prisma.category.create({
-          data: {
-            name: subcategoryName,
-            type,
-            userId,
-            parentCategoryId: category.id,
-          },
-        });
-        console.log(`  └─ Created subcategory: ${subcategoryName}`);
-      }
 
       createdSubcategories.set(subcategoryName, subcategory.id);
     }

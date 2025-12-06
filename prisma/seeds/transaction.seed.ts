@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { CurrencyCode, TransactionType } from '../../generated/prisma/enums';
 import { prisma } from './prisma';
 
