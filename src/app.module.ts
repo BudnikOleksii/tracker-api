@@ -7,7 +7,8 @@ import { AppService } from './app.service';
 import appConfigFactory from './config/app.config.factory';
 import databaseConfigFactory from './config/database.config.factory';
 import authConfigFactory from './config/auth.config.factory';
-import { AppConfigService } from './config';
+import { AppConfigService } from './config/app-config.service';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -18,10 +19,11 @@ import { AppConfigService } from './config';
     }),
     ThrottlerModule.forRoot([
       {
-        ttl: 60000, // 1 minute
-        limit: 10, // 10 requests per minute
+        ttl: 60000,
+        limit: 10,
       },
     ]),
+    PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppConfigService],
