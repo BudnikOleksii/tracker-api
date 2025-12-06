@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as bcrypt from 'bcrypt';
 
 import {
@@ -16,12 +17,12 @@ export const createSuperAdminUser = async () => {
     where: { email: 'admin@gmail.com' },
   });
 
-  let user;
   if (existingUser) {
-    user = existingUser;
-    console.log(`👤 Found existing SUPER_ADMIN user: ${user.email}`);
+    console.log(`👤 Found existing SUPER_ADMIN user: ${existingUser.email}`);
+
+    return existingUser;
   } else {
-    user = await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email: 'admin@trackmymoney.com',
         passwordHash: hashedPassword,
@@ -32,7 +33,7 @@ export const createSuperAdminUser = async () => {
       },
     });
     console.log(`✅ Created SUPER_ADMIN user: ${user.email}`);
-  }
 
-  return user;
+    return user;
+  }
 };

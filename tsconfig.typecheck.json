@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*", "test/**/*", "scripts/**/*"],
+  "exclude": [
+    "generated",
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "prisma/seeds"
+  ]
+}

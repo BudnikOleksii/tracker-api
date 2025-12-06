@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { createSuperAdminUser } from './user.seed';
 import { createCategories } from './category.seed';
 import { createTransactions } from './transaction.seed';
@@ -9,7 +10,7 @@ export const seedDatabase = async () => {
     console.log('🌱 Starting database seeding...');
 
     console.log('📖 Loading transaction data...');
-    const transactions = await loadTransactionData();
+    const transactions = loadTransactionData();
     console.log(`📊 Loaded ${transactions.length} transactions`);
 
     const user = await createSuperAdminUser();
