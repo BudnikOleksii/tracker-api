@@ -2,5 +2,9 @@
   "extends": "./tsconfig.json",
   "exclude": [
     "tracker-api/node_modules",
-    "test", "dist", "**/*spec.ts"]
+    "test",
+    "dist",
+    "generated",
+    "**/*spec.ts"
+  ]
 }
