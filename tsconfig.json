@@ -32,6 +32,14 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src/**/*", "test/**/*", "prisma/**/*", "scripts/**/*"],
-  "exclude": ["generated", "node_modules", "dist"]
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "prisma/**/*",
+    "scripts/**/*",
+    "commitlint.config.ts",
+    "prisma.config.ts",
+    "generated/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
 }

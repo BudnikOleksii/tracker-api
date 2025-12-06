@@ -5,10 +5,11 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 import unusedImports from 'eslint-plugin-unused-imports';
+import noBarrelFiles from 'eslint-plugin-no-barrel-files';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'dist/'],
+    ignores: ['eslint.config.mjs', 'dist/', 'generated/'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -16,6 +17,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
+  noBarrelFiles.flat,
   {
     languageOptions: {
       globals: {

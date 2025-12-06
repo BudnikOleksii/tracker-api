@@ -69,6 +69,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-unused-imports": "4.3.0",
+    "eslint-plugin-no-barrel-files": "1.2.2",
     "globals": "16.5.0",
     "husky": "9.1.7",
     "jest": "30.2.0",

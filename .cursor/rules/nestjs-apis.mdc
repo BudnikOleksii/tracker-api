@@ -104,8 +104,9 @@ Generate code, corrections, and refactorings that comply with the following guid
     - DTOs validated with class-validator for inputs.
     - Declare simple types for outputs.
   - A services module with business logic and persistence.
-    - Entities with MikroORM for data persistence.
     - One service per entity.
+  - A repository layer to separate interaction with the database.
+    - Use dedicated repository classes that fetch data via PrismaService.
 - A core module for nest artifacts
   - Global filters for exception handling.
   - Global middlewares for request management.

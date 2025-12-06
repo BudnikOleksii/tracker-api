@@ -1,4 +1,39 @@
-<!-- c94ed2c8-5e08-486c-bf90-3476e7264b90 2d6e4a84-d65c-49c1-be87-065cb91c287c -->
+---
+name: Expense/Income Tracking NestJS Application Plan
+overview: ''
+todos:
+  - id: a41dc8a2-1985-46c5-a736-dcab2051b4d2
+    content: Create Prisma schema with User, RefreshToken, Category, and Transaction models including all fields, relations, and enums
+    status: pending
+  - id: ee1960a4-9da5-4ab0-9765-7cc220cb0513
+    content: Generate Prisma client and create initial database migration
+    status: pending
+  - id: d589a3f1-060b-4f95-81b7-d60c9aebf618
+    content: Implement core module with guards (JwtAuthGuard, RolesGuard), filters (GlobalExceptionFilter), interceptors, and decorators
+    status: pending
+  - id: 74006f71-7728-474c-a1bf-64e9ff233f6f
+    content: Create shared module with EmailService for sending verification emails and utility functions
+    status: pending
+  - id: 1effa156-6364-405c-938d-30a7505448d4
+    content: Implement auth module with registration, email verification, login, refresh token rotation, and logout functionality
+    status: pending
+  - id: 75946abe-da6a-4f8a-b5b0-0a856df71cd7
+    content: Create users module with profile management and role update endpoints (admin only)
+    status: pending
+  - id: 386ba194-74a7-47be-a110-032f15696c86
+    content: Implement categories module with user-scoped category and subcategory CRUD operations
+    status: pending
+  - id: 9942413f-6cdf-4d4d-844a-c50316b374de
+    content: Create transactions module with CRUD operations, filtering, and statistics endpoints
+    status: pending
+  - id: 6283a119-9927-48c1-91f9-13a93f775c39
+    content: Integrate all modules into AppModule, configure global pipes, filters, and interceptors in main.ts
+    status: pending
+  - id: 94acae8f-7d2d-470d-adcf-722bfa903371
+    content: Set up environment configuration with validation using @nestjs/config and Joi
+    status: pending
+---
+
 # Expense/Income Tracking NestJS Application Plan
 
 This plan is split into 4 independent phases that can be executed separately.
@@ -87,14 +122,14 @@ This plan is split into 4 independent phases that can be executed separately.
 
 ### Auth Module (`src/auth/`)
 
-- **AuthService**: 
+- **AuthService**:
 - `register()` - create user, send verification email
 - `verifyEmail()` - verify email token
 - `login()` - authenticate, create access/refresh tokens
 - `refreshTokens()` - rotate refresh tokens
 - `logout()` - revoke refresh token
 - `logoutAll()` - revoke all user tokens
-- **AuthController**: 
+- **AuthController**:
 - `POST /auth/register`
 - `POST /auth/verify-email`
 - `POST /auth/login`
@@ -204,16 +239,3 @@ This plan is split into 4 independent phases that can be executed separately.
 - Amount precision (Decimal type)
 - Date validation
 - Category name uniqueness per user
-
-### To-dos
-
-- [ ] Create Prisma schema with User, RefreshToken, Category, and Transaction models including all fields, relations, and enums
-- [ ] Generate Prisma client and create initial database migration
-- [ ] Implement core module with guards (JwtAuthGuard, RolesGuard), filters (GlobalExceptionFilter), interceptors, and decorators
-- [ ] Create shared module with EmailService for sending verification emails and utility functions
-- [ ] Implement auth module with registration, email verification, login, refresh token rotation, and logout functionality
-- [ ] Create users module with profile management and role update endpoints (admin only)
-- [ ] Implement categories module with user-scoped category and subcategory CRUD operations
-- [ ] Create transactions module with CRUD operations, filtering, and statistics endpoints
-- [ ] Integrate all modules into AppModule, configure global pipes, filters, and interceptors in main.ts
-- [ ] Set up environment configuration with validation using @nestjs/config and Joi

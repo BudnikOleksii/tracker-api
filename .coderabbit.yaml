@@ -12,7 +12,11 @@ reviews:
   path_filters:
     - '!**/node_modules/**' # Exclude dependencies
     - '!**/dist/**' # Exclude build files
+    - '!generated/**' # Exclude generated with prisma types
+    - '!coverage/**' # Exclude test related folder
   path_instructions:
+    - path: '**/.env*'
+      instructions: 'Check that the sensitive data is not stored in the repository.'
     - path: 'src/**/*.{ts,js}'
       instructions: "Review the TypeScript/JavaScript code for NestJS best practices, dependency injection, module structure, and potential bugs. Ensure that the code adheres to TypeScript's typing system and modern standards."
     - path: 'src/**/*.spec.ts'
