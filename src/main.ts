@@ -29,7 +29,7 @@ async function bootstrap() {
       if (!origin || configService.app.allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(null, false);
       }
     },
   });
