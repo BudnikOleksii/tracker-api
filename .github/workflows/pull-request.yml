@@ -36,10 +36,6 @@ jobs:
           node_version: ${{ needs.init-env.outputs.node_version }}
           pnpm_version: ${{ needs.init-env.outputs.pnpm_version }}
 
-      - name: Build packages
-        run: |
-          pnpm build:packages
-
       - name: Run type-check
         run: |
           pnpm type-check
