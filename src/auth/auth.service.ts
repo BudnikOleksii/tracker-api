@@ -15,7 +15,10 @@ import { EmailService } from '../shared/services/email.service';
 import { AppConfigService } from '../config/app-config.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthResponseDto } from './dto/auth-response.dto';
+import {
+  AuthResponseWithRefreshTokenDto,
+  RefreshTokenResponseDto,
+} from './dto/auth-response.dto';
 import { UserResponseDto } from '../users/dto/user-response.dto';
 import { User } from '../../generated/prisma/client';
 import { JwtPayload } from './strategies/jwt.strategy';
@@ -93,7 +96,7 @@ export class AuthService {
     dto: LoginDto,
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<AuthResponseDto> {
+  ): Promise<AuthResponseWithRefreshTokenDto> {
     const user = await this.usersRepository.findUnique({
       email: dto.email,
     });
@@ -130,12 +133,7 @@ export class AuthService {
       deviceInfo,
       ipAddress,
       userAgent,
-      expiresAt: new Date(
-        Date.now() +
-          (typeof this.configService.auth.jwtRefreshExpiresIn === 'string'
-            ? this.parseExpiration(this.configService.auth.jwtRefreshExpiresIn)
-            : 7 * 24 * 60 * 60 * 1000),
-      ),
+      expiresAt: this.getRefreshTokenExpiresAt(),
     });
 
     return {
@@ -149,7 +147,7 @@ export class AuthService {
     refreshToken: string,
     ipAddress?: string,
     userAgent?: string,
-  ): Promise<Omit<AuthResponseDto, 'user'>> {
+  ): Promise<RefreshTokenResponseDto> {
     const tokenRecord = await this.refreshTokensRepository.findUniqueWithUser({
       token: refreshToken,
     });
@@ -185,12 +183,7 @@ export class AuthService {
       deviceInfo,
       ipAddress,
       userAgent,
-      expiresAt: new Date(
-        Date.now() +
-          (typeof this.configService.auth.jwtRefreshExpiresIn === 'string'
-            ? this.parseExpiration(this.configService.auth.jwtRefreshExpiresIn)
-            : 7 * 24 * 60 * 60 * 1000),
-      ),
+      expiresAt: this.getRefreshTokenExpiresAt(),
     });
 
     await this.refreshTokensRepository.update(
@@ -284,6 +277,13 @@ export class AuthService {
     const os = osMatch ? osMatch[1] : 'Unknown';
 
     return `${browser} on ${os}`;
+  }
+
+  private getRefreshTokenExpiresAt(): Date {
+    return new Date(
+      Date.now() +
+        this.parseExpiration(this.configService.auth.jwtRefreshExpiresIn),
+    );
   }
 
   private parseExpiration(expiration: string): number {

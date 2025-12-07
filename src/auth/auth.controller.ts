@@ -63,7 +63,9 @@ export class AuthController {
 
     this.setRefreshTokenCookie(res, result.refreshToken);
 
-    return result;
+    const { refreshToken: _, ...response } = result;
+
+    return response;
   }
 
   @Public()
@@ -91,7 +93,9 @@ export class AuthController {
 
     this.setRefreshTokenCookie(res, result.refreshToken);
 
-    return result;
+    const { refreshToken: _, ...response } = result;
+
+    return response;
   }
 
   @UseGuards(JwtAuthGuard)

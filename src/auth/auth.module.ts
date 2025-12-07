@@ -9,10 +9,12 @@ import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { RefreshTokensRepository } from './repositories/refresh-tokens.repository';
 import { SharedModule } from '../shared/shared.module';
 import { UsersModule } from '../users/users.module';
+import { ConfigModule } from '../config/config.module';
 import { AppConfigService } from '../config/app-config.service';
 
 @Module({
   imports: [
+    ConfigModule,
     PassportModule,
     JwtModule.registerAsync({
       inject: [AppConfigService],

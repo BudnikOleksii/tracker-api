@@ -56,7 +56,13 @@ export class EmailService {
 
   async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     const emailConfig = this.configService.email;
-    const resetUrl = `${this.configService.app.allowedOrigins[0]}/reset-password?token=${token}`;
+    const frontendUrl = this.configService.app.allowedOrigins[0];
+
+    if (!frontendUrl) {
+      throw new Error('Frontend URL not configured');
+    }
+
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
     const mailOptions = {
       from: emailConfig.from,
