@@ -59,6 +59,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           message = 'Foreign key constraint violation';
           break;
         case 'P2025':
+          status = HttpStatus.NOT_FOUND;
           message = 'Record not found';
           break;
         default:

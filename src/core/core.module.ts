@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
@@ -10,15 +11,15 @@ import { ResponseTransformInterceptor } from './interceptors/response-transform.
   providers: [
     JwtAuthGuard,
     RolesGuard,
-    GlobalExceptionFilter,
-    ResponseTransformInterceptor,
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseTransformInterceptor,
+    },
   ],
-  exports: [
-    JwtAuthGuard,
-    RolesGuard,
-    GlobalExceptionFilter,
-    ResponseTransformInterceptor,
-  ],
+  exports: [JwtAuthGuard, RolesGuard],
 })
 export class CoreModule {}
-

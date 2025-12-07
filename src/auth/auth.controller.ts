@@ -16,7 +16,8 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
-import { AuthResponseDto, UserResponseDto } from './dto/auth-response.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
 import { Public } from '../core/decorators/public.decorator';
 import { JwtAuthGuard } from '../core/guards/jwt-auth.guard';
 import { CurrentUser } from '../core/decorators/current-user.decorator';
@@ -60,12 +61,7 @@ export class AuthController {
 
     const result = await this.authService.login(dto, ipAddress, userAgent);
 
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    this.setRefreshTokenCookie(res, result.refreshToken);
 
     return result;
   }
@@ -93,12 +89,7 @@ export class AuthController {
       userAgent,
     );
 
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    this.setRefreshTokenCookie(res, result.refreshToken);
 
     return result;
   }
@@ -128,5 +119,14 @@ export class AuthController {
     @CurrentUser() user: { id: string },
   ): Promise<{ message: string }> {
     return this.authService.logoutAll(user.id);
+  }
+
+  private setRefreshTokenCookie(res: Response, refreshToken: string): void {
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
   }
 }

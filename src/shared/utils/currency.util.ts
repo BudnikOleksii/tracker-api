@@ -1,3 +1,5 @@
+import { BadRequestException } from '@nestjs/common';
+
 import { CurrencyCode } from '../../../generated/prisma/enums';
 
 export const isValidCurrencyCode = (code: string): code is CurrencyCode => {
@@ -6,7 +8,7 @@ export const isValidCurrencyCode = (code: string): code is CurrencyCode => {
 
 export const validateCurrencyCode = (code: string): CurrencyCode => {
   if (!isValidCurrencyCode(code)) {
-    throw new Error(`Invalid currency code: ${code}`);
+    throw new BadRequestException(`Invalid currency code: ${code}`);
   }
 
   return code;

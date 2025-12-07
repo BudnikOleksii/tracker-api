@@ -22,12 +22,15 @@ export class EmailService {
     });
   }
 
-  async sendVerificationEmail(
-    email: string,
-    token: string,
-  ): Promise<void> {
+  async sendVerificationEmail(email: string, token: string): Promise<void> {
     const emailConfig = this.configService.email;
-    const verificationUrl = `${this.configService.app.allowedOrigins[0]}/verify-email?token=${token}`;
+    const frontendUrl = this.configService.app.allowedOrigins[0];
+
+    if (!frontendUrl) {
+      throw new Error('Frontend URL not configured');
+    }
+
+    const verificationUrl = `${frontendUrl}/verify-email?token=${token}`;
 
     const mailOptions = {
       from: emailConfig.from,
@@ -51,10 +54,7 @@ export class EmailService {
     }
   }
 
-  async sendPasswordResetEmail(
-    email: string,
-    token: string,
-  ): Promise<void> {
+  async sendPasswordResetEmail(email: string, token: string): Promise<void> {
     const emailConfig = this.configService.email;
     const resetUrl = `${this.configService.app.allowedOrigins[0]}/reset-password?token=${token}`;
 
@@ -75,9 +75,11 @@ export class EmailService {
       await this.transporter.sendMail(mailOptions);
       this.logger.log(`Password reset email sent to ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to send password reset email to ${email}`, error);
+      this.logger.error(
+        `Failed to send password reset email to ${email}`,
+        error,
+      );
       throw new Error('Failed to send password reset email');
     }
   }
 }
-

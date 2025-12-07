@@ -3,10 +3,12 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 
 import { UsersRepository } from './repositories/users.repository';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { User } from '../../generated/prisma/client';
 import { UserRole } from '../../generated/prisma/enums';
 import { ERROR_MESSAGES } from '../core/constants/error-messages.constant';
 
@@ -21,9 +23,7 @@ export class UsersService {
       throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
-    const { deletedAt: _deletedAt, ...userData } = user;
-
-    return userData as UserResponseDto;
+    return this.mapUserToDto(user);
   }
 
   async findByEmail(email: string): Promise<UserResponseDto> {
@@ -33,9 +33,7 @@ export class UsersService {
       throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
-    const { deletedAt: _deletedAt, ...userData } = user;
-
-    return userData as UserResponseDto;
+    return this.mapUserToDto(user);
   }
 
   async updateProfile(
@@ -56,7 +54,7 @@ export class UsersService {
       },
     );
 
-    return updatedUser as UserResponseDto;
+    return this.mapUserToDto(updatedUser);
   }
 
   async updateRole(
@@ -81,6 +79,12 @@ export class UsersService {
       { role: newRole },
     );
 
-    return updatedUser as UserResponseDto;
+    return this.mapUserToDto(updatedUser);
+  }
+
+  private mapUserToDto(user: User): UserResponseDto {
+    return plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
   }
 }

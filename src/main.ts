@@ -4,8 +4,6 @@ import { ValidationPipe } from '@nestjs/common';
 
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
-import { GlobalExceptionFilter } from './core/filters/global-exception.filter';
-import { ResponseTransformInterceptor } from './core/interceptors/response-transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,9 +19,6 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-
-  app.useGlobalFilters(new GlobalExceptionFilter());
-  app.useGlobalInterceptors(new ResponseTransformInterceptor());
 
   app.enableCors({
     credentials: true,

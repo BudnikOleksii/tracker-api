@@ -2,6 +2,7 @@ import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
 
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { JwtAuthGuard } from '../core/guards/jwt-auth.guard';
 import { RolesGuard } from '../core/guards/roles.guard';
@@ -41,8 +42,8 @@ export class UsersController {
   @Roles(UserRole.SUPER_ADMIN)
   async updateUserRole(
     @Param('id') id: string,
-    @Body('role') role: UserRole,
+    @Body() dto: UpdateRoleDto,
   ): Promise<UserResponseDto> {
-    return this.usersService.updateRole(id, role);
+    return this.usersService.updateRole(id, dto.role);
   }
 }

@@ -5,6 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { plainToInstance } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -14,14 +15,11 @@ import { EmailService } from '../shared/services/email.service';
 import { AppConfigService } from '../config/app-config.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { AuthResponseDto, UserResponseDto } from './dto/auth-response.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
+import { User } from '../../generated/prisma/client';
 import { JwtPayload } from './strategies/jwt.strategy';
 import { ERROR_MESSAGES } from '../core/constants/error-messages.constant';
-import {
-  UserRole,
-  CountryCode,
-  CurrencyCode,
-} from '../../generated/prisma/enums';
 
 @Injectable()
 export class AuthService {
@@ -64,7 +62,7 @@ export class AuthService {
 
     await this.emailService.sendVerificationEmail(dto.email, verificationToken);
 
-    return this.toUserResponseDto(user);
+    return this.mapUserToDto(user);
   }
 
   async verifyEmail(token: string): Promise<{ message: string }> {
@@ -143,7 +141,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: this.toUserResponseDto(user),
+      user: this.mapUserToDto(user),
     };
   }
 
@@ -264,26 +262,10 @@ export class AuthService {
     });
   }
 
-  private toUserResponseDto(user: {
-    id: string;
-    email: string;
-    emailVerified: boolean;
-    countryCode: string | null;
-    baseCurrencyCode: string | null;
-    role: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }): UserResponseDto {
-    return {
-      id: user.id,
-      email: user.email,
-      emailVerified: user.emailVerified,
-      countryCode: user.countryCode as CountryCode | null,
-      baseCurrencyCode: user.baseCurrencyCode as CurrencyCode | null,
-      role: user.role as UserRole,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    } as UserResponseDto;
+  private mapUserToDto(user: User): UserResponseDto {
+    return plainToInstance(UserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
   }
 
   private getDeviceInfo(userAgent?: string): string {
