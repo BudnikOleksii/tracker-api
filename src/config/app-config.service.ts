@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { AppConfig, Environment } from './app.config';
 import { DatabaseConfig } from './database.config';
 import { AuthConfig } from './auth.config';
+import { EmailConfig } from './email.config';
 
 @Injectable()
 export class AppConfigService {
@@ -34,6 +35,16 @@ export class AppConfigService {
 
     if (!config) {
       throw new Error('Auth configuration is not available');
+    }
+
+    return config;
+  }
+
+  get email(): EmailConfig {
+    const config = this.configService.get<EmailConfig>('email');
+
+    if (!config) {
+      throw new Error('Email configuration is not available');
     }
 
     return config;

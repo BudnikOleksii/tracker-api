@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -453,38 +454,38 @@ model User {
 }
 
 model RefreshToken {
-  id              String        @id @default(uuid()) @db.Uuid
-  userId          String        @db.Uuid
-  token           String        @unique
-  deviceInfo      String?
-  ipAddress       String?
-  userAgent       String?
-  expiresAt       DateTime
-  replacedByTokenId String?     @unique @db.Uuid
-  replacedByToken RefreshToken? @relation("ReplacedBy", fields: [replacedByTokenId], references: [id])
-  replacedToken   RefreshToken? @relation("ReplacedBy")
-  revokedAt       DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @db.Uuid
+  token             String        @unique
+  deviceInfo        String?
+  ipAddress         String?
+  userAgent         String?
+  expiresAt         DateTime
+  replacedByTokenId String?       @unique @db.Uuid
+  replacedByToken   RefreshToken? @relation("ReplacedBy", fields: [replacedByTokenId], references: [id])
+  replacedToken     RefreshToken? @relation("ReplacedBy")
+  revokedAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@index([userId])
 }
 
 model Category {
-  id              String          @id @default(uuid()) @db.Uuid
-  userId          String          @db.Uuid
-  name            String
-  type            TransactionType
-  parentCategoryId String?        @db.Uuid
-  parentCategory  Category?       @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: Cascade)
-  subcategories   Category[]      @relation("CategoryHierarchy")
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  deletedAt       DateTime?
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions    Transaction[]
+  id               String          @id @default(uuid()) @db.Uuid
+  userId           String          @db.Uuid
+  name             String
+  type             TransactionType
+  parentCategoryId String?         @db.Uuid
+  parentCategory   Category?       @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: Cascade)
+  subcategories    Category[]      @relation("CategoryHierarchy")
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  deletedAt        DateTime?
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions     Transaction[]
 
   @@unique([userId, name, type, parentCategoryId])
   @@index([userId])
@@ -493,19 +494,19 @@ model Category {
 }
 
 model Transaction {
-  id          String          @id @default(uuid()) @db.Uuid
-  userId      String          @db.Uuid
-  categoryId  String          @db.Uuid
-  type        TransactionType
-  amount      Decimal         @db.Decimal(19, 4)
+  id           String          @id @default(uuid()) @db.Uuid
+  userId       String          @db.Uuid
+  categoryId   String          @db.Uuid
+  type         TransactionType
+  amount       Decimal         @db.Decimal(19, 4)
   currencyCode CurrencyCode
-  date        DateTime
-  description String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  deletedAt   DateTime?
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  date         DateTime
+  description  String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   @@index([userId])
   @@index([categoryId])
