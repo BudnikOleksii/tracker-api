@@ -14,6 +14,7 @@ import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { UsersModule } from './users/users.module';
     SharedModule,
     AuthModule,
     UsersModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppConfigService],

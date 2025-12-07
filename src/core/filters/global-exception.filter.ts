@@ -52,6 +52,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             const target = exception.meta.target as string[];
             if (target.includes('email')) {
               message = ERROR_MESSAGES.EMAIL_ALREADY_EXISTS;
+            } else if (
+              target.includes('userId') &&
+              target.includes('name') &&
+              target.includes('type')
+            ) {
+              message = ERROR_MESSAGES.CATEGORY_ALREADY_EXISTS;
             }
           }
           break;

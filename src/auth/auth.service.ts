@@ -43,6 +43,9 @@ export class AuthService {
       email: dto.email,
     });
 
+    /**
+     * TODO: Handle soft delete cases
+     */
     if (existingUser && !existingUser.deletedAt) {
       throw new ConflictException(ERROR_MESSAGES.EMAIL_ALREADY_EXISTS);
     }
