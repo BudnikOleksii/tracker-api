@@ -6,9 +6,8 @@ import {
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 
-import { Prisma, Category } from '../../generated/prisma/client';
+import { Category } from '../../generated/prisma/client';
 import { CategoriesRepository } from './repositories/categories.repository';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
@@ -17,10 +16,7 @@ import { ERROR_MESSAGES } from '../core/constants/error-messages.constant';
 
 @Injectable()
 export class CategoriesService {
-  constructor(
-    private categoriesRepository: CategoriesRepository,
-    private prisma: PrismaService,
-  ) {}
+  constructor(private categoriesRepository: CategoriesRepository) {}
 
   async create(
     userId: string,
@@ -30,40 +26,35 @@ export class CategoriesService {
       await this.validateParentCategory(userId, dto.parentCategoryId, dto.type);
     }
 
-    try {
-      const category = await this.categoriesRepository.create({
-        userId,
-        name: dto.name,
-        type: dto.type,
-        parentCategoryId: dto.parentCategoryId,
-      });
+    const categoryExists = await this.categoriesRepository.checkCategoryExists(
+      userId,
+      dto.name,
+      dto.type,
+      dto.parentCategoryId,
+    );
 
-      return this.mapCategoryToDto(category);
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException(ERROR_MESSAGES.CATEGORY_ALREADY_EXISTS);
-      }
-      throw error;
+    if (categoryExists) {
+      throw new ConflictException(ERROR_MESSAGES.CATEGORY_ALREADY_EXISTS);
     }
+
+    const category = await this.categoriesRepository.create({
+      userId,
+      name: dto.name,
+      type: dto.type,
+      parentCategoryId: dto.parentCategoryId,
+    });
+
+    return this.mapCategoryToDto(category);
   }
 
   async findAll(
     userId: string,
     type?: TransactionType,
   ): Promise<CategoryResponseDto[]> {
-    const where: Prisma.CategoryWhereInput = {
+    const categories = await this.categoriesRepository.findByUserId(
       userId,
-      deletedAt: null,
-    };
-
-    if (type) {
-      where.type = type;
-    }
-
-    const categories = await this.categoriesRepository.findMany(where);
+      type,
+    );
 
     const rootCategories = categories.filter(
       (category) => category.parentCategoryId === null,
@@ -87,107 +78,83 @@ export class CategoriesService {
     id: string,
     dto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    await this.validateCategoryOwnership(userId, id);
+    const currentCategory = await this.validateCategoryOwnership(userId, id);
 
-    if (dto.parentCategoryId !== undefined) {
-      if (dto.parentCategoryId === id) {
-        throw new BadRequestException(
-          ERROR_MESSAGES.CIRCULAR_CATEGORY_REFERENCE,
-        );
-      }
-
-      if (dto.parentCategoryId) {
-        const currentCategory = await this.categoriesRepository.findUnique({
-          id,
-        });
-
-        if (!currentCategory) {
-          throw new NotFoundException(ERROR_MESSAGES.CATEGORY_NOT_FOUND);
-        }
-
-        await this.validateParentCategory(
-          userId,
-          dto.parentCategoryId,
-          dto.type || currentCategory.type,
-        );
-
-        await this.checkCircularReference(id, dto.parentCategoryId);
-      }
+    if (dto.parentCategoryId === id) {
+      throw new BadRequestException(ERROR_MESSAGES.CIRCULAR_CATEGORY_REFERENCE);
     }
 
-    if (dto.type !== undefined) {
-      const currentCategory = await this.categoriesRepository.findUnique({
-        id,
+    if (dto.parentCategoryId) {
+      await this.validateParentCategory(userId, dto.parentCategoryId, dto.type);
+
+      await this.checkCircularReference(id, dto.parentCategoryId);
+    }
+
+    if (currentCategory.parentCategoryId) {
+      const parentCategory = await this.categoriesRepository.findUnique({
+        id: currentCategory.parentCategoryId,
       });
 
-      if (!currentCategory) {
-        throw new NotFoundException(ERROR_MESSAGES.CATEGORY_NOT_FOUND);
-      }
-
-      if (currentCategory.parentCategoryId && dto.type !== undefined) {
-        const parentCategory = await this.categoriesRepository.findUnique({
-          id: currentCategory.parentCategoryId,
-        });
-
-        if (parentCategory && parentCategory.type !== dto.type) {
-          throw new BadRequestException(
-            ERROR_MESSAGES.PARENT_CATEGORY_TYPE_MISMATCH,
-          );
-        }
-      }
-
-      const subcategoriesCount = await this.categoriesRepository.count({
-        parentCategoryId: id,
-        deletedAt: null,
-      });
-
-      if (subcategoriesCount > 0) {
+      if (parentCategory && parentCategory.type !== dto.type) {
         throw new BadRequestException(
           ERROR_MESSAGES.PARENT_CATEGORY_TYPE_MISMATCH,
         );
       }
     }
 
-    try {
-      const updatedCategory = await this.categoriesRepository.update(
-        { id },
-        {
-          name: dto.name,
-          type: dto.type,
-          parentCategoryId: dto.parentCategoryId,
-        },
-      );
+    const subcategoriesCount =
+      await this.categoriesRepository.countSubcategoriesByParentId(id);
 
-      return this.mapCategoryToDto(updatedCategory);
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
+    if (subcategoriesCount > 0 && dto.type !== currentCategory.type) {
+      throw new BadRequestException(
+        ERROR_MESSAGES.PARENT_CATEGORY_TYPE_MISMATCH,
+      );
+    }
+
+    const isUniqueFieldsChanging =
+      dto.name !== currentCategory.name ||
+      dto.type !== currentCategory.type ||
+      dto.parentCategoryId !== currentCategory.parentCategoryId;
+
+    if (isUniqueFieldsChanging) {
+      const categoryExists =
+        await this.categoriesRepository.checkCategoryExists(
+          userId,
+          dto.name,
+          dto.type,
+          dto.parentCategoryId,
+          id,
+        );
+
+      if (categoryExists) {
         throw new ConflictException(ERROR_MESSAGES.CATEGORY_ALREADY_EXISTS);
       }
-      throw error;
     }
+
+    const updatedCategory = await this.categoriesRepository.update(
+      { id },
+      {
+        name: dto.name,
+        type: dto.type,
+        parentCategoryId: dto.parentCategoryId,
+      },
+    );
+
+    return this.mapCategoryToDto(updatedCategory);
   }
 
   async remove(userId: string, id: string): Promise<void> {
     await this.validateCategoryOwnership(userId, id);
 
-    const subcategoriesCount = await this.categoriesRepository.count({
-      parentCategoryId: id,
-      deletedAt: null,
-    });
+    const subcategoriesCount =
+      await this.categoriesRepository.countSubcategoriesByParentId(id);
 
     if (subcategoriesCount > 0) {
       throw new ConflictException(ERROR_MESSAGES.CATEGORY_HAS_SUBCATEGORIES);
     }
 
-    const transactionsCount = await this.prisma.transaction.count({
-      where: {
-        categoryId: id,
-        deletedAt: null,
-      },
-    });
+    const transactionsCount =
+      await this.categoriesRepository.countTransactionsByCategoryId(id);
 
     if (transactionsCount > 0) {
       throw new ConflictException(ERROR_MESSAGES.CATEGORY_HAS_TRANSACTIONS);

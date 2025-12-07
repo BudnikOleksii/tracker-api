@@ -49,7 +49,16 @@ export class CategoriesRepository {
     });
   }
 
-  async findMany(where: Prisma.CategoryWhereInput) {
+  async findByUserId(userId: string, type?: TransactionType) {
+    const where: Prisma.CategoryWhereInput = {
+      userId,
+      deletedAt: null,
+    };
+
+    if (type) {
+      where.type = type;
+    }
+
     return this.prisma.category.findMany({
       where,
       include: {
@@ -112,9 +121,49 @@ export class CategoriesRepository {
     });
   }
 
-  async count(where: Prisma.CategoryWhereInput) {
+  async countSubcategoriesByParentId(
+    parentCategoryId: string,
+  ): Promise<number> {
     return this.prisma.category.count({
-      where,
+      where: {
+        parentCategoryId,
+        deletedAt: null,
+      },
     });
+  }
+
+  async countTransactionsByCategoryId(categoryId: string): Promise<number> {
+    return this.prisma.transaction.count({
+      where: {
+        categoryId,
+        deletedAt: null,
+      },
+    });
+  }
+
+  async checkCategoryExists(
+    userId: string,
+    name: string,
+    type: TransactionType,
+    parentCategoryId?: string | null,
+    excludeId?: string,
+  ): Promise<boolean> {
+    const where: Prisma.CategoryWhereInput = {
+      userId,
+      name,
+      type,
+      parentCategoryId: parentCategoryId ?? null,
+      deletedAt: null,
+    };
+
+    if (excludeId) {
+      where.id = {
+        not: excludeId,
+      };
+    }
+
+    const count = await this.prisma.category.count({ where });
+
+    return count > 0;
   }
 }

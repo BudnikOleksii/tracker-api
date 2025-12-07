@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
+  Put,
   Delete,
   Param,
   Body,
@@ -49,7 +49,7 @@ export class CategoriesController {
     return this.categoriesService.findOne(user.id, id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   async update(
     @CurrentUser() user: { id: string },
     @Param('id') id: string,
