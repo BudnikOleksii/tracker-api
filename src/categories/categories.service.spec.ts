@@ -114,7 +114,7 @@ describe('CategoriesService', () => {
         userId,
         createDto.name,
         createDto.type,
-        null,
+        undefined,
       );
       expect(categoriesRepository.create).toHaveBeenCalledWith({
         userId,
@@ -394,6 +394,9 @@ describe('CategoriesService', () => {
       await expect(
         service.update(userId, mockCategory.id, updateWithAncestorDto),
       ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.update(userId, mockCategory.id, updateWithAncestorDto),
+      ).rejects.toThrow(ERROR_MESSAGES.CIRCULAR_CATEGORY_REFERENCE);
     });
 
     it('should validate parent category ownership', async () => {
@@ -476,13 +479,15 @@ describe('CategoriesService', () => {
 
       categoriesRepository.findUnique
         .mockResolvedValueOnce(categoryWithParent)
-        .mockResolvedValueOnce(incomeParent)
         .mockResolvedValueOnce(incomeParent);
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(0);
 
       await expect(
         service.update(userId, mockCategory.id, updateTypeDto),
       ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.update(userId, mockCategory.id, updateTypeDto),
+      ).rejects.toThrow(ERROR_MESSAGES.PARENT_CATEGORY_TYPE_MISMATCH);
     });
   });
 

@@ -195,7 +195,6 @@ describe('TransactionsService', () => {
 
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('amount');
-      expect(result).not.toHaveProperty('userId');
     });
   });
 

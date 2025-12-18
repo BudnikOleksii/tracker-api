@@ -64,7 +64,6 @@ export const testDatabaseConfig = {
 **Directory:** `test/fixtures/`**Files to create:**
 
 1. **`test/fixtures/user.factory.ts`**
-
    ```typescript
    export class UserFactory {
      static create(overrides?: Partial<User>): User;
@@ -76,7 +75,6 @@ export const testDatabaseConfig = {
    ```
 
 2. **`test/fixtures/category.factory.ts`**
-
    ```typescript
    export class CategoryFactory {
      static create(userId: string, overrides?: Partial<Category>): Category;
@@ -102,7 +100,6 @@ export const testDatabaseConfig = {
    ```
 
 3. **`test/fixtures/transaction.factory.ts`**
-
    ```typescript
    export class TransactionFactory {
      static create(
@@ -146,6 +143,7 @@ export const testDatabaseConfig = {
      ): RefreshToken;
    }
    ```
+
 
 ### 2.1.5 Enhance Jest Configuration
 
@@ -1098,4 +1096,3 @@ services:
 ## Success Criteria
 
 - ✅ All services have minimum 80% code coverage
-- ✅ All repositories have minimum 75% code coverage

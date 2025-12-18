@@ -11,13 +11,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email.service';
 import { AppConfigService } from '../../config/app-config.service';
 
-const mockSendMail = jest.fn().mockResolvedValue({ messageId: 'test-id' });
-const mockCreateTransport = jest.fn().mockReturnValue({
+const mockSendMail = jest.fn();
+const mockTransporter = {
   sendMail: mockSendMail,
-});
+};
 
 jest.mock('nodemailer', () => ({
-  createTransport: mockCreateTransport,
+  createTransport: jest.fn(),
 }));
 
 describe('EmailService', () => {
@@ -38,6 +38,11 @@ describe('EmailService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     mockSendMail.mockResolvedValue({ messageId: 'test-id' });
+
+    const nodemailer = await import('nodemailer');
+    jest
+      .spyOn(nodemailer, 'createTransport')
+      .mockReturnValue(mockTransporter as never);
 
     const mockConfigService = {
       email: {
