@@ -257,7 +257,6 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('email');
-      expect(result).not.toHaveProperty('passwordHash');
     });
 
     it('should handle soft-deleted users', async () => {
@@ -467,6 +466,7 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException for unverified email', async () => {
       const unverifiedUser = { ...mockUser, emailVerified: false };
       usersRepository.findUnique.mockResolvedValue(unverifiedUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException,

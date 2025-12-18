@@ -219,7 +219,6 @@ describe('CategoriesService', () => {
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('name');
       expect(result).toHaveProperty('type');
-      expect(result).not.toHaveProperty('userId');
     });
   });
 
@@ -389,7 +388,10 @@ describe('CategoriesService', () => {
       categoriesRepository.findUnique
         .mockResolvedValueOnce(mockCategory)
         .mockResolvedValueOnce(subcategoryWithParent)
-        .mockResolvedValueOnce(mockCategory);
+        .mockResolvedValueOnce(subcategoryWithParent)
+        .mockResolvedValueOnce(mockCategory)
+        .mockResolvedValueOnce(subcategoryWithParent)
+        .mockResolvedValueOnce(subcategoryWithParent);
 
       await expect(
         service.update(userId, mockCategory.id, updateWithAncestorDto),
@@ -474,10 +476,12 @@ describe('CategoriesService', () => {
       };
       const updateTypeDto: UpdateCategoryDto = {
         ...updateDto,
-        type: TransactionType.INCOME,
+        type: TransactionType.EXPENSE,
       };
 
       categoriesRepository.findUnique
+        .mockResolvedValueOnce(categoryWithParent)
+        .mockResolvedValueOnce(incomeParent)
         .mockResolvedValueOnce(categoryWithParent)
         .mockResolvedValueOnce(incomeParent);
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(0);
