@@ -19,6 +19,8 @@ import {
   ApiParam,
   ApiQuery,
   ApiBearerAuth,
+  ApiExtraModels,
+  getSchemaPath,
 } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../core/guards/jwt-auth.guard';
@@ -31,6 +33,7 @@ import { TransactionResponseDto } from './dto/transaction-response.dto';
 import { TransactionStatisticsQueryDto } from './dto/transaction-statistics-query.dto';
 import { TransactionStatisticsResponseDto } from './dto/transaction-statistics-response.dto';
 import { TransactionType, CurrencyCode } from '../../generated/prisma/enums';
+import { PaginatedResponseDto } from '../shared/dto/paginated-response.dto';
 
 @ApiTags('transactions')
 @ApiBearerAuth('JWT-auth')
@@ -60,6 +63,7 @@ export class TransactionsController {
   }
 
   @Get()
+  @ApiExtraModels(PaginatedResponseDto, TransactionResponseDto)
   @ApiOperation({
     summary: 'Get all transactions',
     description:
@@ -115,23 +119,18 @@ export class TransactionsController {
       properties: {
         data: {
           type: 'array',
-          items: { $ref: '#/components/schemas/TransactionResponseDto' },
+          items: { $ref: getSchemaPath(TransactionResponseDto) },
         },
-        total: { type: 'number' },
-        page: { type: 'number' },
-        limit: { type: 'number' },
+        total: { type: 'number', description: 'Total number of items' },
+        page: { type: 'number', description: 'Current page number' },
+        limit: { type: 'number', description: 'Items per page' },
       },
     },
   })
   async findAll(
     @CurrentUser() user: { id: string },
     @Query() query: TransactionQueryDto,
-  ): Promise<{
-    data: TransactionResponseDto[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
+  ): Promise<PaginatedResponseDto<TransactionResponseDto>> {
     return this.transactionsService.findAll(user.id, query);
   }
 
