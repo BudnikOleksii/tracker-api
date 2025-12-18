@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 import { AppConfigService } from './config/app-config.service';
+import { createSwaggerDocumentBuilder } from './shared/utils/swagger.util';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -33,6 +35,12 @@ async function bootstrap() {
       }
     },
   });
+
+  if (!configService.isProduction) {
+    const config = createSwaggerDocumentBuilder().build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup(configService.app.swaggerPath, app, document);
+  }
 
   await app.listen(configService.app.port, configService.app.host);
 

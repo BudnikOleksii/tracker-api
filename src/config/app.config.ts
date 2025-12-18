@@ -11,6 +11,7 @@ export interface AppConfig {
   port: number;
   host: string;
   allowedOrigins: string[];
+  swaggerPath: string;
 }
 
 export const appConfigSchema = Joi.object<AppConfig>({
@@ -20,4 +21,5 @@ export const appConfigSchema = Joi.object<AppConfig>({
   port: Joi.number().port().default(3000),
   host: Joi.string().default('localhost'),
   allowedOrigins: Joi.array().items(Joi.string()),
+  swaggerPath: Joi.string().default('/api/docs'),
 });

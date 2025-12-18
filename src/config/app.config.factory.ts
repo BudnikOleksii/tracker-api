@@ -10,6 +10,7 @@ export default registerAs('app', (): AppConfig => {
     allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',').map((origin) =>
       origin.trim(),
     ) || ['http://localhost:3000'],
+    swaggerPath: process.env.SWAGGER_PATH || '/api/docs',
   };
 
   const validationResult = appConfigSchema.validate(configValues, {
