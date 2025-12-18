@@ -17,7 +17,7 @@ const mockTransporter = {
 };
 
 jest.mock('nodemailer', () => ({
-  createTransport: jest.fn(),
+  createTransport: jest.fn(() => mockTransporter),
 }));
 
 describe('EmailService', () => {
