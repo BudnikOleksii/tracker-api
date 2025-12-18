@@ -1,8 +1,8 @@
 import {
   IsUUID,
   IsEnum,
+  IsNumber,
   IsPositive,
-  IsNumberString,
   IsDateString,
   IsOptional,
   IsString,
@@ -18,9 +18,9 @@ export class CreateTransactionDto {
   @IsEnum(TransactionType)
   type!: TransactionType;
 
-  @IsNumberString()
+  @IsNumber()
   @IsPositive()
-  amount!: string;
+  amount!: number;
 
   @IsEnum(CurrencyCode)
   currencyCode!: CurrencyCode;

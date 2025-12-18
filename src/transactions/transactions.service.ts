@@ -42,7 +42,6 @@ export class TransactionsService {
     userId: string,
     dto: CreateTransactionDto,
   ): Promise<TransactionResponseDto> {
-    this.validateAmount(dto.amount);
     await this.validateCategoryOwnership(userId, dto.categoryId, dto.type);
 
     const transaction = await this.transactionsRepository.create({
@@ -142,18 +141,14 @@ export class TransactionsService {
     dto: UpdateTransactionDto,
   ): Promise<TransactionResponseDto> {
     if (
-      !dto.categoryId &&
-      !dto.type &&
-      !dto.amount &&
-      !dto.currencyCode &&
-      !dto.date &&
-      !dto.description
+      dto.categoryId === undefined &&
+      dto.type === undefined &&
+      dto.amount === undefined &&
+      dto.currencyCode === undefined &&
+      dto.date === undefined &&
+      dto.description === undefined
     ) {
       throw new BadRequestException(ERROR_MESSAGES.NO_FIELDS_TO_UPDATE);
-    }
-
-    if (dto.amount) {
-      this.validateAmount(dto.amount);
     }
 
     const currentTransaction = await this.validateTransactionOwnership(
@@ -327,14 +322,6 @@ export class TransactionsService {
 
     if (dateTo && dateTo > now) {
       throw new BadRequestException(ERROR_MESSAGES.INVALID_DATE_RANGE);
-    }
-  }
-
-  private validateAmount(amount: string): void {
-    const numericAmount = Number(amount);
-
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-      throw new BadRequestException(ERROR_MESSAGES.INVALID_AMOUNT);
     }
   }
 
