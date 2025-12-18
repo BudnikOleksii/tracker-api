@@ -13,10 +13,22 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import { TransactionType } from '../../generated/prisma/enums';
 import { ERROR_MESSAGES } from '../core/constants/error-messages.constant';
+import { CacheService } from '../cache/cache.service';
+import { CacheKeyUtil } from '../cache/utils/cache-key.util';
+import { CacheInvalidationUtil } from '../cache/utils/cache-invalidation.util';
+
+const CATEGORY_CACHE_TTL = 3600;
 
 @Injectable()
 export class CategoriesService {
-  constructor(private categoriesRepository: CategoriesRepository) {}
+  private cacheInvalidation: CacheInvalidationUtil;
+
+  constructor(
+    private categoriesRepository: CategoriesRepository,
+    private cacheService: CacheService,
+  ) {
+    this.cacheInvalidation = new CacheInvalidationUtil(cacheService);
+  }
 
   async create(
     userId: string,
@@ -44,6 +56,8 @@ export class CategoriesService {
       parentCategoryId: dto.parentCategoryId,
     });
 
+    await this.cacheInvalidation.invalidateAllUserCategories(userId);
+
     return this.mapCategoryToDto(category);
   }
 
@@ -51,6 +65,13 @@ export class CategoriesService {
     userId: string,
     type?: TransactionType,
   ): Promise<CategoryResponseDto[]> {
+    const cacheKey = CacheKeyUtil.categoriesAll(userId, type);
+    const cached = await this.cacheService.get<CategoryResponseDto[]>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
     const categories = await this.categoriesRepository.findByUserId(
       userId,
       type,
@@ -60,7 +81,13 @@ export class CategoriesService {
       (category) => category.parentCategoryId === null,
     );
 
-    return rootCategories.map((category) => this.mapCategoryToDto(category));
+    const result = rootCategories.map((category) =>
+      this.mapCategoryToDto(category),
+    );
+
+    await this.cacheService.set(cacheKey, result, CATEGORY_CACHE_TTL);
+
+    return result;
   }
 
   async findOne(userId: string, id: string): Promise<CategoryResponseDto> {
@@ -70,7 +97,17 @@ export class CategoriesService {
       throw new NotFoundException(ERROR_MESSAGES.CATEGORY_NOT_FOUND);
     }
 
-    return this.mapCategoryToDto(category);
+    const cacheKey = CacheKeyUtil.categoryById(id);
+    const cached = await this.cacheService.get<CategoryResponseDto>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
+    const result = this.mapCategoryToDto(category);
+    await this.cacheService.set(cacheKey, result, CATEGORY_CACHE_TTL);
+
+    return result;
   }
 
   async update(
@@ -140,6 +177,11 @@ export class CategoriesService {
       },
     );
 
+    await Promise.all([
+      this.cacheInvalidation.invalidateCategoryById(id),
+      this.cacheInvalidation.invalidateAllUserCategories(userId),
+    ]);
+
     return this.mapCategoryToDto(updatedCategory);
   }
 
@@ -161,6 +203,11 @@ export class CategoriesService {
     }
 
     await this.categoriesRepository.softDelete({ id });
+
+    await Promise.all([
+      this.cacheInvalidation.invalidateCategoryById(id),
+      this.cacheInvalidation.invalidateAllUserCategories(userId),
+    ]);
   }
 
   private async validateCategoryOwnership(
