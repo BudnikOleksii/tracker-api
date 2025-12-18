@@ -21,5 +21,10 @@ export const ERROR_MESSAGES = {
     'Cannot set parent that would create a circular reference',
   PARENT_CATEGORY_TYPE_MISMATCH: 'Parent category type must match',
   TRANSACTION_NOT_FOUND: 'Transaction not found',
+  INVALID_CATEGORY_FOR_TRANSACTION: 'Category does not match transaction type',
+  INVALID_DATE_RANGE:
+    'Invalid date range: dateFrom must be before or equal to dateTo',
+  INVALID_AMOUNT: 'Amount must be a positive number',
+  NO_FIELDS_TO_UPDATE: 'At least one field must be provided for update',
   VALIDATION_ERROR: 'Validation failed',
 } as const;
