@@ -11,6 +11,13 @@ import {
 } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -22,6 +29,7 @@ import { Public } from '../core/decorators/public.decorator';
 import { JwtAuthGuard } from '../core/guards/jwt-auth.guard';
 import { CurrentUser } from '../core/decorators/current-user.decorator';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -29,6 +37,21 @@ export class AuthController {
   @Public()
   @Post('register')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Register new user',
+    description: 'Creates a new user account and sends verification email',
+  })
+  @ApiBody({ type: RegisterDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User successfully registered',
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error or user already exists',
+  })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async register(
     @Body() dto: RegisterDto,
     @Req() req: Request,
@@ -43,6 +66,13 @@ export class AuthController {
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Verify email address',
+    description: 'Verifies user email with token sent to email',
+  })
+  @ApiBody({ type: VerifyEmailDto })
+  @ApiResponse({ status: 200, description: 'Email successfully verified' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   async verifyEmail(@Body() dto: VerifyEmailDto): Promise<{ message: string }> {
     return this.authService.verifyEmail(dto.token);
   }
@@ -51,6 +81,19 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Login user',
+    description:
+      'Authenticates user and returns access token. Sets refresh token in HTTP-only cookie.',
+  })
+  @ApiBody({ type: LoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 403, description: 'Email not verified' })
   async login(
     @Body() dto: LoginDto,
     @Req() req: Request,
@@ -72,6 +115,25 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Refresh access token',
+    description: 'Generates new access token using refresh token from cookie',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Token refreshed successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        accessToken: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 400, description: 'Refresh token not provided' })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired refresh token',
+  })
   async refreshTokens(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -101,6 +163,13 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Logout user',
+    description: 'Invalidates current refresh token and logs out user',
+  })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -119,6 +188,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('logout-all')
   @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Logout from all devices',
+    description: 'Invalidates all refresh tokens for the user',
+  })
+  @ApiResponse({ status: 200, description: 'Logged out from all devices' })
   async logoutAll(
     @CurrentUser() user: { id: string },
   ): Promise<{ message: string }> {
