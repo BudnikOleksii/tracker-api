@@ -1099,6 +1099,3 @@ services:
 
 - ✅ All services have minimum 80% code coverage
 - ✅ All repositories have minimum 75% code coverage
-- ✅ All controllers have integration tests
-- ✅ Critical user journeys have E2E tests
-- ✅ All tests pass consistently
