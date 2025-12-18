@@ -12,7 +12,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "test": "jest --passWithNoTests",
-    "test:unit": "jest --testPathPattern=spec.ts$ --testPathIgnorePatterns=integration|e2e",
+    "test:unit": "jest --config jest-unit.config.json",
     "test:integration": "jest --testPathPattern=integration.spec.ts$",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:cov": "jest --coverage",
