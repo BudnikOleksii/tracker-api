@@ -31,6 +31,7 @@ describe('EmailService', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     mockTransporter = {
       sendMail: jest.fn().mockResolvedValue({ messageId: 'test-id' }),
     };
