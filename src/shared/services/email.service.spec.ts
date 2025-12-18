@@ -7,6 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as nodemailer from 'nodemailer';
 
 import { EmailService } from './email.service';
 import { AppConfigService } from '../../config/app-config.service';
@@ -38,11 +39,10 @@ describe('EmailService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     mockSendMail.mockResolvedValue({ messageId: 'test-id' });
-
-    const nodemailer = await import('nodemailer');
-    jest
-      .spyOn(nodemailer, 'createTransport')
-      .mockReturnValue(mockTransporter as never);
+    const mockedNodemailer = nodemailer as {
+      createTransport: jest.Mock;
+    };
+    mockedNodemailer.createTransport.mockReturnValue(mockTransporter);
 
     const mockConfigService = {
       email: {
