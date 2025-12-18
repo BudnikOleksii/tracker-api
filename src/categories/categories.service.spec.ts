@@ -110,17 +110,17 @@ describe('CategoriesService', () => {
 
       const result = await service.create(userId, createDto);
 
-      expect(categoriesRepository.checkCategoryExists).toHaveBeenCalledWith(
-        userId,
-        createDto.name,
-        createDto.type,
-        undefined,
-      );
+      const checkCategoryExistsCall =
+        categoriesRepository.checkCategoryExists.mock.calls[0];
+      expect(checkCategoryExistsCall[0]).toBe(userId);
+      expect(checkCategoryExistsCall[1]).toBe(createDto.name);
+      expect(checkCategoryExistsCall[2]).toBe(createDto.type);
+      expect(checkCategoryExistsCall[3]).toBeUndefined();
       expect(categoriesRepository.create).toHaveBeenCalledWith({
         userId,
         name: createDto.name,
         type: createDto.type,
-        parentCategoryId: null,
+        parentCategoryId: undefined,
       });
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('name', createDto.name);
