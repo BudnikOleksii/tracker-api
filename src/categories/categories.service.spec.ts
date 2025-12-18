@@ -380,10 +380,16 @@ describe('CategoriesService', () => {
         parentCategoryId: 'subcategory-id',
       };
 
+      const subcategoryWithParent = {
+        ...mockSubcategory,
+        id: 'subcategory-id',
+        parentCategoryId: mockCategory.id,
+      };
+
       categoriesRepository.findUnique
         .mockResolvedValueOnce(mockCategory)
-        .mockResolvedValueOnce(mockSubcategory)
-        .mockResolvedValueOnce(mockParentCategory);
+        .mockResolvedValueOnce(subcategoryWithParent)
+        .mockResolvedValueOnce(mockCategory);
 
       await expect(
         service.update(userId, mockCategory.id, updateWithAncestorDto),
@@ -456,9 +462,11 @@ describe('CategoriesService', () => {
       const categoryWithParent = {
         ...mockCategory,
         parentCategoryId: 'parent-id',
+        type: TransactionType.EXPENSE,
       };
       const incomeParent = {
         ...mockParentCategory,
+        id: 'parent-id',
         type: TransactionType.INCOME,
       };
       const updateTypeDto: UpdateCategoryDto = {
@@ -468,6 +476,7 @@ describe('CategoriesService', () => {
 
       categoriesRepository.findUnique
         .mockResolvedValueOnce(categoryWithParent)
+        .mockResolvedValueOnce(incomeParent)
         .mockResolvedValueOnce(incomeParent);
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(0);
 

@@ -133,13 +133,11 @@ describe('AuthService', () => {
     refreshTokensRepository = module.get(RefreshTokensRepository);
     jwtService = module.get(JwtService);
     emailService = module.get(EmailService);
-
-    jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
-    jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('register', () => {
@@ -151,6 +149,7 @@ describe('AuthService', () => {
     };
 
     it('should successfully register new user', async () => {
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       usersRepository.findUnique.mockResolvedValue(null);
       usersRepository.create.mockResolvedValue(mockUser);
       emailService.sendVerificationEmail.mockResolvedValue(undefined);
@@ -183,6 +182,7 @@ describe('AuthService', () => {
     });
 
     it('should hash password correctly', async () => {
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       usersRepository.findUnique.mockResolvedValue(null);
       usersRepository.create.mockResolvedValue(mockUser);
       emailService.sendVerificationEmail.mockResolvedValue(undefined);
@@ -193,6 +193,7 @@ describe('AuthService', () => {
     });
 
     it('should generate verification token', async () => {
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       usersRepository.findUnique.mockResolvedValue(null);
       usersRepository.create.mockResolvedValue(mockUser);
       emailService.sendVerificationEmail.mockResolvedValue(undefined);
@@ -208,6 +209,7 @@ describe('AuthService', () => {
     });
 
     it('should set token expiration to 24 hours', async () => {
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       usersRepository.findUnique.mockResolvedValue(null);
       usersRepository.create.mockResolvedValue(mockUser);
       emailService.sendVerificationEmail.mockResolvedValue(undefined);
@@ -227,6 +229,7 @@ describe('AuthService', () => {
     });
 
     it('should send verification email', async () => {
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       usersRepository.findUnique.mockResolvedValue(null);
       usersRepository.create.mockResolvedValue(mockUser);
       emailService.sendVerificationEmail.mockResolvedValue(undefined);
@@ -240,6 +243,7 @@ describe('AuthService', () => {
     });
 
     it('should return UserResponseDto', async () => {
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       usersRepository.findUnique.mockResolvedValue(null);
       usersRepository.create.mockResolvedValue(mockUser);
       emailService.sendVerificationEmail.mockResolvedValue(undefined);
@@ -252,6 +256,7 @@ describe('AuthService', () => {
     });
 
     it('should handle soft-deleted users', async () => {
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashed-password' as never);
       const deletedUser = { ...mockUser, deletedAt: new Date() };
       usersRepository.findUnique.mockResolvedValue(deletedUser);
       usersRepository.create.mockResolvedValue(mockUser);
@@ -389,6 +394,7 @@ describe('AuthService', () => {
     };
 
     it('should successfully login with valid credentials', async () => {
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
       usersRepository.findUnique.mockResolvedValue(mockUser);
       jwtService.signAsync.mockResolvedValue('access-token');
       refreshTokensRepository.create.mockResolvedValue({
@@ -466,6 +472,7 @@ describe('AuthService', () => {
     });
 
     it('should generate access and refresh tokens', async () => {
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
       usersRepository.findUnique.mockResolvedValue(mockUser);
       jwtService.signAsync.mockResolvedValue('token');
       refreshTokensRepository.create.mockResolvedValue({
@@ -488,6 +495,7 @@ describe('AuthService', () => {
     });
 
     it('should create refresh token record', async () => {
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
       usersRepository.findUnique.mockResolvedValue(mockUser);
       jwtService.signAsync.mockResolvedValue('token');
       refreshTokensRepository.create.mockResolvedValue({
@@ -519,6 +527,7 @@ describe('AuthService', () => {
     });
 
     it('should return AuthResponseWithRefreshTokenDto', async () => {
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
       usersRepository.findUnique.mockResolvedValue(mockUser);
       jwtService.signAsync.mockResolvedValue('token');
       refreshTokensRepository.create.mockResolvedValue({

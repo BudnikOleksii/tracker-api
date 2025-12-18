@@ -7,10 +7,18 @@ import {
   jest,
 } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as nodemailer from 'nodemailer';
 
 import { EmailService } from './email.service';
 import { AppConfigService } from '../../config/app-config.service';
+
+const mockSendMail = jest.fn().mockResolvedValue({ messageId: 'test-id' });
+const mockCreateTransport = jest.fn().mockReturnValue({
+  sendMail: mockSendMail,
+});
+
+jest.mock('nodemailer', () => ({
+  createTransport: mockCreateTransport,
+}));
 
 describe('EmailService', () => {
   let service: EmailService;
@@ -26,19 +34,10 @@ describe('EmailService', () => {
       allowedOrigins: string[];
     };
   };
-  let mockTransporter: {
-    sendMail: jest.Mock;
-  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockTransporter = {
-      sendMail: jest.fn().mockResolvedValue({ messageId: 'test-id' }),
-    };
-
-    jest
-      .spyOn(nodemailer, 'createTransport')
-      .mockReturnValue(mockTransporter as never);
+    mockSendMail.mockResolvedValue({ messageId: 'test-id' });
 
     const mockConfigService = {
       email: {
@@ -78,7 +77,7 @@ describe('EmailService', () => {
     it('should successfully send verification email', async () => {
       await service.sendVerificationEmail(email, token);
 
-      expect(mockTransporter.sendMail).toHaveBeenCalledWith(
+      expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           from: configService.email.from,
           to: email,
@@ -90,7 +89,7 @@ describe('EmailService', () => {
     it('should use correct email template', async () => {
       await service.sendVerificationEmail(email, token);
 
-      const callArgs = mockTransporter.sendMail.mock.calls[0]?.[0];
+      const callArgs = mockSendMail.mock.calls[0]?.[0];
       expect(callArgs.html).toContain('Email Verification');
       expect(callArgs.html).toContain('verify your email address');
       expect(callArgs.text).toContain('verify your email address');
@@ -99,7 +98,7 @@ describe('EmailService', () => {
     it('should include verification token in email', async () => {
       await service.sendVerificationEmail(email, token);
 
-      const callArgs = mockTransporter.sendMail.mock.calls[0]?.[0];
+      const callArgs = mockSendMail.mock.calls[0]?.[0];
       expect(callArgs.html).toContain(token);
       expect(callArgs.text).toContain(token);
     });
@@ -107,7 +106,7 @@ describe('EmailService', () => {
     it('should include verification URL in email', async () => {
       await service.sendVerificationEmail(email, token);
 
-      const callArgs = mockTransporter.sendMail.mock.calls[0]?.[0];
+      const callArgs = mockSendMail.mock.calls[0]?.[0];
       const expectedUrl = `${configService.app.allowedOrigins[0]}/verify-email?token=${token}`;
       expect(callArgs.html).toContain(expectedUrl);
       expect(callArgs.text).toContain(expectedUrl);
@@ -115,7 +114,7 @@ describe('EmailService', () => {
 
     it('should handle email sending errors', async () => {
       const error = new Error('SMTP error');
-      mockTransporter.sendMail.mockRejectedValue(error);
+      mockSendMail.mockRejectedValueOnce(error);
 
       await expect(service.sendVerificationEmail(email, token)).rejects.toThrow(
         'Failed to send verification email',
@@ -154,7 +153,7 @@ describe('EmailService', () => {
     it('should successfully send password reset email', async () => {
       await service.sendPasswordResetEmail(email, token);
 
-      expect(mockTransporter.sendMail).toHaveBeenCalledWith(
+      expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           from: configService.email.from,
           to: email,
@@ -166,7 +165,7 @@ describe('EmailService', () => {
     it('should include reset token in email', async () => {
       await service.sendPasswordResetEmail(email, token);
 
-      const callArgs = mockTransporter.sendMail.mock.calls[0]?.[0];
+      const callArgs = mockSendMail.mock.calls[0]?.[0];
       expect(callArgs.html).toContain(token);
       expect(callArgs.text).toContain(token);
     });
@@ -174,7 +173,7 @@ describe('EmailService', () => {
     it('should include reset URL in email', async () => {
       await service.sendPasswordResetEmail(email, token);
 
-      const callArgs = mockTransporter.sendMail.mock.calls[0]?.[0];
+      const callArgs = mockSendMail.mock.calls[0]?.[0];
       const expectedUrl = `${configService.app.allowedOrigins[0]}/reset-password?token=${token}`;
       expect(callArgs.html).toContain(expectedUrl);
       expect(callArgs.text).toContain(expectedUrl);
@@ -182,7 +181,7 @@ describe('EmailService', () => {
 
     it('should handle email sending errors', async () => {
       const error = new Error('SMTP error');
-      mockTransporter.sendMail.mockRejectedValue(error);
+      mockSendMail.mockRejectedValueOnce(error);
 
       await expect(
         service.sendPasswordResetEmail(email, token),

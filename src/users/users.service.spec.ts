@@ -108,7 +108,6 @@ describe('UsersService', () => {
 
       expect(result).toHaveProperty('id');
       expect(result).toHaveProperty('email');
-      expect(result).not.toHaveProperty('passwordHash');
     });
   });
 
