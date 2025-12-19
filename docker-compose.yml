@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15.15-alpine
     container_name: tracker-postgres
     restart: unless-stopped
     environment:
@@ -17,7 +15,7 @@ services:
       - tracker-network
 
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:9.9
     container_name: tracker-pgadmin
     restart: unless-stopped
     environment:
@@ -34,7 +32,7 @@ services:
       - postgres
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.3-alpine
     container_name: tracker-redis
     restart: unless-stopped
     ports:
@@ -64,7 +62,7 @@ services:
       - redis
 
   postgres-test:
-    image: postgres:15-alpine
+    image: postgres:15.15-alpine
     container_name: tracker-postgres-test
     environment:
       POSTGRES_USER: tracker

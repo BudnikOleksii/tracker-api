@@ -53,29 +53,35 @@ export class CacheService {
   async delPattern(pattern: string): Promise<void> {
     try {
       const prefixedPattern = this.prefixKey(pattern);
-      const cacheManagerUnknown = this.cacheManager as unknown as {
-        stores?: {
-          opts?: { namespace?: string };
-          keys?: () => Promise<string[]>;
-        }[];
+      const regex = this.buildRegexFromPattern(prefixedPattern);
+      const cacheManagerWithStores = this.cacheManager as unknown as {
+        stores?: unknown[];
       };
 
-      if (
-        cacheManagerUnknown.stores &&
-        Array.isArray(cacheManagerUnknown.stores)
-      ) {
-        for (const store of cacheManagerUnknown.stores) {
-          if (store && typeof store.opts?.namespace === 'string') {
-            const keys = await this.getKeysByPattern(store, prefixedPattern);
-            if (keys && keys.length > 0) {
-              await Promise.all(
-                keys.map((key: string) => this.cacheManager.del(key)),
-              );
-            }
-          }
-        }
-      } else {
+      if (!cacheManagerWithStores.stores) {
         this.logger.warn('Pattern-based deletion not supported by cache store');
+
+        return;
+      }
+
+      for (const store of cacheManagerWithStores.stores) {
+        const matchingKeys = await this.collectKeysForStore(
+          store,
+          prefixedPattern,
+          regex,
+        );
+
+        if (!matchingKeys.length) {
+          continue;
+        }
+
+        const chunkSize = 100;
+
+        for (let index = 0; index < matchingKeys.length; index += chunkSize) {
+          const chunk = matchingKeys.slice(index, index + chunkSize);
+
+          await Promise.all(chunk.map((key) => this.cacheManager.del(key)));
+        }
       }
     } catch (error) {
       this.logger.error(
@@ -85,24 +91,222 @@ export class CacheService {
     }
   }
 
-  private async getKeysByPattern(
-    store: { keys?: () => Promise<string[]> },
+  private async collectKeysForStore(
+    store: unknown,
     pattern: string,
+    regex: RegExp,
   ): Promise<string[]> {
-    if (store && typeof store.keys === 'function') {
-      try {
-        const allKeys = await store.keys();
-        if (Array.isArray(allKeys)) {
-          const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+    if (this.isIterableStore(store)) {
+      return this.collectKeysFromIterator(store, regex);
+    }
 
-          return allKeys.filter((key: string) => regex.test(key));
-        }
-      } catch (error) {
-        this.logger.warn('Error getting keys from store:', error);
+    const redisClient = this.getRedisClientFromStore(store);
+
+    if (redisClient) {
+      return this.collectKeysFromRedisClient(redisClient, pattern, regex);
+    }
+
+    this.logger.warn('Pattern-based deletion not supported by cache store');
+
+    return [];
+  }
+
+  private isIterableStore(store: unknown): store is {
+    iterator?: () => AsyncIterable<string> | Iterable<string>;
+    iterate?: () => AsyncIterable<string> | Iterable<string>;
+  } {
+    if (!store) {
+      return false;
+    }
+
+    const candidate = store as {
+      iterator?: () => AsyncIterable<string> | Iterable<string>;
+      iterate?: () => AsyncIterable<string> | Iterable<string>;
+    };
+
+    return (
+      typeof candidate.iterator === 'function' ||
+      typeof candidate.iterate === 'function'
+    );
+  }
+
+  private async collectKeysFromIterator(
+    store: {
+      iterator?: () => AsyncIterable<string> | Iterable<string>;
+      iterate?: () => AsyncIterable<string> | Iterable<string>;
+    },
+    regex: RegExp,
+  ): Promise<string[]> {
+    const iteratorFn = store.iterator ?? store.iterate;
+
+    if (!iteratorFn) {
+      return [];
+    }
+
+    const collectedKeys: string[] = [];
+
+    for await (const item of iteratorFn.call(store) as
+      | AsyncIterable<unknown>
+      | Iterable<unknown>) {
+      if (typeof item === 'string' && regex.test(item)) {
+        collectedKeys.push(item);
       }
     }
 
-    return [];
+    return collectedKeys;
+  }
+
+  private getRedisClientFromStore(store: unknown): {
+    scan?: (
+      cursor: string,
+      match: string,
+      count: number,
+    ) => Promise<[string, string[]]> | [string, string[]];
+    scanIterator?: (match: string) => AsyncIterable<string> | Iterable<string>;
+  } | null {
+    if (!store) {
+      return null;
+    }
+
+    const candidate = store as {
+      getClient?: () =>
+        | {
+            scan?: (
+              cursor: string,
+              match: string,
+              count: number,
+            ) => Promise<[string, string[]]> | [string, string[]];
+            scanIterator?: (
+              match: string,
+            ) => AsyncIterable<string> | Iterable<string>;
+          }
+        | undefined;
+      getRedisClient?: () =>
+        | {
+            scan?: (
+              cursor: string,
+              match: string,
+              count: number,
+            ) => Promise<[string, string[]]> | [string, string[]];
+            scanIterator?: (
+              match: string,
+            ) => AsyncIterable<string> | Iterable<string>;
+          }
+        | undefined;
+    };
+
+    if (typeof candidate.getClient === 'function') {
+      const client = candidate.getClient();
+
+      if (client) {
+        return client;
+      }
+    }
+
+    if (typeof candidate.getRedisClient === 'function') {
+      const client = candidate.getRedisClient();
+
+      if (client) {
+        return client;
+      }
+    }
+
+    return null;
+  }
+
+  private async collectKeysFromRedisClient(
+    client: {
+      scan?: (
+        cursor: string,
+        match: string,
+        count: number,
+      ) => Promise<[string, string[]]> | [string, string[]];
+      scanIterator?: (
+        match: string,
+      ) => AsyncIterable<string> | Iterable<string>;
+    },
+    pattern: string,
+    regex: RegExp,
+  ): Promise<string[]> {
+    const collectedKeys: string[] = [];
+
+    if (client.scanIterator) {
+      const iterable = client.scanIterator(pattern);
+
+      for await (const key of iterable as
+        | AsyncIterable<unknown>
+        | Iterable<unknown>) {
+        if (typeof key === 'string' && regex.test(key)) {
+          collectedKeys.push(key);
+        }
+      }
+
+      return collectedKeys;
+    }
+
+    if (!client.scan) {
+      return collectedKeys;
+    }
+
+    let cursor = '0';
+
+    do {
+      const result = await Promise.resolve(client.scan(cursor, pattern, 100));
+
+      const nextCursor = result[0];
+      const batchKeys = result[1];
+
+      for (const key of batchKeys) {
+        if (regex.test(key)) {
+          collectedKeys.push(key);
+        }
+      }
+
+      cursor = nextCursor;
+    } while (cursor !== '0');
+
+    return collectedKeys;
+  }
+
+  private buildRegexFromPattern(pattern: string): RegExp {
+    let regexPattern = '^';
+    let index = 0;
+
+    while (index < pattern.length) {
+      const char = pattern.charAt(index);
+
+      if (char === '\\') {
+        const nextChar = pattern.charAt(index + 1);
+
+        if (nextChar === undefined) {
+          regexPattern += '\\\\';
+          index += 1;
+        } else {
+          regexPattern += this.escapeRegexChar(nextChar);
+          index += 2;
+        }
+      } else if (char === '*') {
+        regexPattern += '.*';
+        index += 1;
+      } else {
+        regexPattern += this.escapeRegexChar(char);
+        index += 1;
+      }
+    }
+
+    regexPattern += '$';
+
+    return new RegExp(regexPattern);
+  }
+
+  private escapeRegexChar(char: string): string {
+    const specials = '.+?[]^$(){}|\\';
+
+    if (specials.includes(char)) {
+      return `\\${char}`;
+    }
+
+    return char;
   }
 
   private prefixKey(key: string): string {
