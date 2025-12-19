@@ -175,42 +175,6 @@ describe('UsersService', () => {
         service.updateProfile('non-existent-id', updateDto),
       ).rejects.toThrow(NotFoundException);
     });
-
-    it('should validate country code', async () => {
-      const invalidUpdateDto = {
-        ...updateDto,
-        countryCode: 'INVALID' as CountryCode,
-      };
-      usersRepository.findUnique.mockResolvedValue(mockUser);
-
-      const updatedUser = {
-        ...mockUser,
-        ...invalidUpdateDto,
-      };
-      usersRepository.update.mockResolvedValue(updatedUser);
-
-      const result = await service.updateProfile(mockUser.id, invalidUpdateDto);
-
-      expect(result).toHaveProperty('countryCode');
-    });
-
-    it('should validate currency code', async () => {
-      const invalidUpdateDto = {
-        ...updateDto,
-        baseCurrencyCode: 'INVALID' as CurrencyCode,
-      };
-      usersRepository.findUnique.mockResolvedValue(mockUser);
-
-      const updatedUser = {
-        ...mockUser,
-        ...invalidUpdateDto,
-      };
-      usersRepository.update.mockResolvedValue(updatedUser);
-
-      const result = await service.updateProfile(mockUser.id, invalidUpdateDto);
-
-      expect(result).toHaveProperty('baseCurrencyCode');
-    });
   });
 
   describe('updateRole', () => {

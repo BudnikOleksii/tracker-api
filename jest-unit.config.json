@@ -22,7 +22,7 @@
       "lines": 70,
       "statements": 70
     },
-    "./src/**/*.service.ts": {
+    "**/*.service.ts": {
       "branches": 80,
       "functions": 80,
       "lines": 80,
@@ -34,7 +34,6 @@
     "^@/(.*)$": "<rootDir>/$1",
     "^(\\.{1,2}/.*)\\.js$": "$1"
   },
-  "extensionsToTreatAsEsm": [".ts"],
   "globals": {
     "ts-jest": {
       "useESM": false
