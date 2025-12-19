@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 
 import { CategoriesService } from './categories.service';
+import { CacheService } from '../cache/cache.service';
 import { CategoriesRepository } from './repositories/categories.repository';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -80,12 +81,23 @@ describe('CategoriesService', () => {
       countTransactionsByCategoryId: jest.fn(),
     };
 
+    const mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      delPattern: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CategoriesService,
         {
           provide: CategoriesRepository,
           useValue: mockCategoriesRepository,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
         },
       ],
     }).compile();

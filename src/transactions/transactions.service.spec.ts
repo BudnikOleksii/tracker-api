@@ -10,6 +10,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { TransactionsService } from './transactions.service';
+import { CacheService } from '../cache/cache.service';
 import {
   TransactionsRepository,
   TransactionWithCategory,
@@ -86,6 +87,13 @@ describe('TransactionsService', () => {
       findUnique: jest.fn(),
     };
 
+    const mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      delPattern: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
@@ -96,6 +104,10 @@ describe('TransactionsService', () => {
         {
           provide: CategoriesRepository,
           useValue: mockCategoriesRepository,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
         },
       ],
     }).compile();
