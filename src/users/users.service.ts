@@ -11,19 +11,41 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { User } from '../../generated/prisma/client';
 import { UserRole } from '../../generated/prisma/enums';
 import { ERROR_MESSAGES } from '../core/constants/error-messages.constant';
+import { CacheService } from '../cache/cache.service';
+import { CacheKeyUtil } from '../cache/utils/cache-key.util';
+import { CacheInvalidationUtil } from '../cache/utils/cache-invalidation.util';
+
+const USER_CACHE_TTL = 900;
 
 @Injectable()
 export class UsersService {
-  constructor(private usersRepository: UsersRepository) {}
+  private cacheInvalidation: CacheInvalidationUtil;
+
+  constructor(
+    private usersRepository: UsersRepository,
+    private cacheService: CacheService,
+  ) {
+    this.cacheInvalidation = new CacheInvalidationUtil(cacheService);
+  }
 
   async findById(id: string): Promise<UserResponseDto> {
+    const cacheKey = CacheKeyUtil.userProfile(id);
+    const cached = await this.cacheService.get<UserResponseDto>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
     const user = await this.usersRepository.findUnique({ id });
 
     if (!user || user.deletedAt) {
       throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
-    return this.mapUserToDto(user);
+    const result = this.mapUserToDto(user);
+    await this.cacheService.set(cacheKey, result, USER_CACHE_TTL);
+
+    return result;
   }
 
   async findByEmail(email: string): Promise<UserResponseDto> {
@@ -54,6 +76,8 @@ export class UsersService {
       },
     );
 
+    await this.cacheInvalidation.invalidateUserProfile(userId);
+
     return this.mapUserToDto(updatedUser);
   }
 
@@ -78,6 +102,8 @@ export class UsersService {
       { id: userId },
       { role: newRole },
     );
+
+    await this.cacheInvalidation.invalidateUserProfile(userId);
 
     return this.mapUserToDto(updatedUser);
   }

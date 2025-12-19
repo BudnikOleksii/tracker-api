@@ -8,10 +8,12 @@ import appConfigFactory from './config/app.config.factory';
 import databaseConfigFactory from './config/database.config.factory';
 import authConfigFactory from './config/auth.config.factory';
 import emailConfigFactory from './config/email.config.factory';
+import cacheConfigFactory from './config/cache.config.factory';
 import { AppConfigService } from './config/app-config.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
+import { CacheModule } from './cache/cache.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -27,6 +29,7 @@ import { TransactionsModule } from './transactions/transactions.module';
         databaseConfigFactory,
         authConfigFactory,
         emailConfigFactory,
+        cacheConfigFactory,
       ],
     }),
     ThrottlerModule.forRoot([
@@ -38,6 +41,7 @@ import { TransactionsModule } from './transactions/transactions.module';
     PrismaModule,
     CoreModule,
     SharedModule,
+    CacheModule,
     AuthModule,
     UsersModule,
     CategoriesModule,

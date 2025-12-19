@@ -27,16 +27,25 @@ import {
   TransactionStatisticsGroupDataDto,
   TransactionStatisticsResponseDto,
 } from './dto/transaction-statistics-response.dto';
+import { CacheService } from '../cache/cache.service';
+import { CacheKeyUtil } from '../cache/utils/cache-key.util';
+import { CacheInvalidationUtil } from '../cache/utils/cache-invalidation.util';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
+const STATISTICS_CACHE_TTL = 300;
 
 @Injectable()
 export class TransactionsService {
+  private cacheInvalidation: CacheInvalidationUtil;
+
   constructor(
     private transactionsRepository: TransactionsRepository,
     private categoriesRepository: CategoriesRepository,
-  ) {}
+    private cacheService: CacheService,
+  ) {
+    this.cacheInvalidation = new CacheInvalidationUtil(cacheService);
+  }
 
   async create(
     userId: string,
@@ -53,6 +62,8 @@ export class TransactionsService {
       date: dto.date,
       description: dto.description,
     });
+
+    await this.cacheInvalidation.invalidateTransactionStats(userId);
 
     return this.mapTransactionToDto(transaction);
   }
@@ -173,6 +184,8 @@ export class TransactionsService {
       },
     );
 
+    await this.cacheInvalidation.invalidateTransactionStats(userId);
+
     return this.mapTransactionToDto(updatedTransaction);
   }
 
@@ -180,6 +193,8 @@ export class TransactionsService {
     await this.validateTransactionOwnership(userId, id);
 
     await this.transactionsRepository.softDelete({ id });
+
+    await this.cacheInvalidation.invalidateTransactionStats(userId);
   }
 
   async getStatistics(
@@ -187,6 +202,14 @@ export class TransactionsService {
     query: TransactionStatisticsQueryDto,
   ): Promise<TransactionStatisticsResponseDto> {
     this.validateDateRange(query.dateFrom, query.dateTo);
+
+    const cacheKey = CacheKeyUtil.transactionStats(userId, query);
+    const cached =
+      await this.cacheService.get<TransactionStatisticsResponseDto>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
 
     const where: {
       userId: string;
@@ -228,13 +251,17 @@ export class TransactionsService {
     if (!query.groupBy) {
       const summary = aggregateResult as TransactionsAggregateSummary;
 
-      return this.buildStatisticsResponse(
+      const result = this.buildStatisticsResponse(
         summary.totalAmount,
         summary.transactionCount,
         [],
         query.dateFrom ?? null,
         query.dateTo ?? null,
       );
+
+      await this.cacheService.set(cacheKey, result, STATISTICS_CACHE_TTL);
+
+      return result;
     }
 
     const grouped = aggregateResult as TransactionsAggregateGroupItem[];
@@ -261,13 +288,17 @@ export class TransactionsService {
       0,
     );
 
-    return this.buildStatisticsResponse(
+    const result = this.buildStatisticsResponse(
       totalAmount,
       transactionCount,
       groupedData,
       query.dateFrom ?? null,
       query.dateTo ?? null,
     );
+
+    await this.cacheService.set(cacheKey, result, STATISTICS_CACHE_TTL);
+
+    return result;
   }
 
   private async validateTransactionOwnership(
