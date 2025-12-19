@@ -6,6 +6,7 @@ import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 import unusedImports from 'eslint-plugin-unused-imports';
 import noBarrelFiles from 'eslint-plugin-no-barrel-files';
+import pluginJest from 'eslint-plugin-jest';
 
 export default tseslint.config(
   {
@@ -18,6 +19,7 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
   noBarrelFiles.flat,
+  pluginJest.configs["flat/recommended"],
   {
     languageOptions: {
       globals: {
@@ -35,6 +37,7 @@ export default tseslint.config(
     plugins: {
       'unused-imports': unusedImports,
       import: importPlugin,
+      jest: pluginJest,
     },
     rules: {
       '@typescript-eslint/no-unused-vars': 'off',
@@ -90,6 +93,8 @@ export default tseslint.config(
       'no-multiple-empty-lines': ['error', { max: 1 }],
       'no-console': ['error', { allow: ['warn', 'error'] }],
       '@typescript-eslint/no-extraneous-class': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      'jest/unbound-method': 'error',
     },
   },
 );

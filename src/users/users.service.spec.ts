@@ -21,12 +21,11 @@ import {
 import { User } from '../../generated/prisma/client';
 import { ERROR_MESSAGES } from '../core/constants/error-messages.constant';
 
+import Mocked = jest.Mocked;
+
 describe('UsersService', () => {
   let service: UsersService;
-  let usersRepository: {
-    findUnique: jest.Mock;
-    update: jest.Mock;
-  };
+  let usersRepository: Mocked<UsersRepository>;
 
   const mockUser: User = {
     id: 'user-id',

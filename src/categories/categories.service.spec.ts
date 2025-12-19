@@ -22,18 +22,18 @@ import { TransactionType } from '../../generated/prisma/enums';
 import { Category } from '../../generated/prisma/client';
 import { ERROR_MESSAGES } from '../core/constants/error-messages.constant';
 
+type CategoryWithRelations = Awaited<
+  ReturnType<CategoriesRepository['findUnique']>
+>;
+type CategoryArrayWithRelations = Awaited<
+  ReturnType<CategoriesRepository['findByUserId']>
+>;
+type CreatedCategory = Awaited<ReturnType<CategoriesRepository['create']>>;
+type UpdatedCategory = Awaited<ReturnType<CategoriesRepository['update']>>;
+
 describe('CategoriesService', () => {
   let service: CategoriesService;
-  let categoriesRepository: {
-    findUnique: jest.Mock;
-    findByUserId: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    softDelete: jest.Mock;
-    checkCategoryExists: jest.Mock;
-    countSubcategoriesByParentId: jest.Mock;
-    countTransactionsByCategoryId: jest.Mock;
-  };
+  let categoriesRepository: jest.Mocked<CategoriesRepository>;
 
   const userId = 'user-id';
   const mockCategory: Category = {
@@ -73,7 +73,7 @@ describe('CategoriesService', () => {
     const mockCategoriesRepository = {
       findUnique: jest.fn(),
       findByUserId: jest.fn(),
-      create: jest.fn(),
+      create: jest.fn<(data: unknown) => Promise<Category>>(),
       update: jest.fn(),
       softDelete: jest.fn(),
       checkCategoryExists: jest.fn(),
@@ -118,16 +118,18 @@ describe('CategoriesService', () => {
 
     it('should successfully create root category', async () => {
       categoriesRepository.checkCategoryExists.mockResolvedValue(false);
-      categoriesRepository.create.mockResolvedValue(mockCategory);
+      categoriesRepository.create.mockResolvedValue(
+        mockCategory as CreatedCategory,
+      );
 
       const result = await service.create(userId, createDto);
 
       const checkCategoryExistsCall =
         categoriesRepository.checkCategoryExists.mock.calls[0];
-      expect(checkCategoryExistsCall[0]).toBe(userId);
-      expect(checkCategoryExistsCall[1]).toBe(createDto.name);
-      expect(checkCategoryExistsCall[2]).toBe(createDto.type);
-      expect(checkCategoryExistsCall[3]).toBeUndefined();
+      expect(checkCategoryExistsCall?.[0]).toBe(userId);
+      expect(checkCategoryExistsCall?.[1]).toBe(createDto.name);
+      expect(checkCategoryExistsCall?.[2]).toBe(createDto.type);
+      expect(checkCategoryExistsCall?.[3]).toBeUndefined();
       expect(categoriesRepository.create).toHaveBeenCalledWith({
         userId,
         name: createDto.name,
@@ -146,15 +148,17 @@ describe('CategoriesService', () => {
       };
 
       categoriesRepository.findUnique
-        .mockResolvedValueOnce(mockParentCategory)
+        .mockResolvedValueOnce(mockParentCategory as CategoryWithRelations)
         .mockResolvedValueOnce(null);
       categoriesRepository.checkCategoryExists.mockResolvedValue(false);
-      categoriesRepository.create.mockResolvedValue(mockSubcategory);
+      categoriesRepository.create.mockResolvedValue(
+        mockSubcategory as CreatedCategory,
+      );
 
       const result = await service.create(userId, createSubcategoryDto);
 
       expect(categoriesRepository.findUnique).toHaveBeenCalledWith({
-        id: createSubcategoryDto.parentCategoryId,
+        id: 'parent-category-id',
       });
       expect(categoriesRepository.checkCategoryExists).toHaveBeenCalledWith(
         userId,
@@ -191,7 +195,9 @@ describe('CategoriesService', () => {
         parentCategoryId: 'parent-category-id',
       };
 
-      categoriesRepository.findUnique.mockResolvedValue(otherUserCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        otherUserCategory as CategoryWithRelations,
+      );
 
       await expect(
         service.create(userId, createSubcategoryDto),
@@ -212,7 +218,9 @@ describe('CategoriesService', () => {
         parentCategoryId: 'parent-category-id',
       };
 
-      categoriesRepository.findUnique.mockResolvedValue(incomeParent);
+      categoriesRepository.findUnique.mockResolvedValue(
+        incomeParent as CategoryWithRelations,
+      );
 
       await expect(
         service.create(userId, createSubcategoryDto),
@@ -224,7 +232,9 @@ describe('CategoriesService', () => {
 
     it('should return CategoryResponseDto', async () => {
       categoriesRepository.checkCategoryExists.mockResolvedValue(false);
-      categoriesRepository.create.mockResolvedValue(mockCategory);
+      categoriesRepository.create.mockResolvedValue(
+        mockCategory as CreatedCategory,
+      );
 
       const result = await service.create(userId, createDto);
 
@@ -237,7 +247,9 @@ describe('CategoriesService', () => {
   describe('findAll', () => {
     it('should return all root categories for user', async () => {
       const categories = [mockCategory, mockParentCategory];
-      categoriesRepository.findByUserId.mockResolvedValue(categories);
+      categoriesRepository.findByUserId.mockResolvedValue(
+        categories as CategoryArrayWithRelations,
+      );
 
       const result = await service.findAll(userId);
 
@@ -251,7 +263,9 @@ describe('CategoriesService', () => {
 
     it('should filter by transaction type (INCOME)', async () => {
       const incomeCategory = { ...mockCategory, type: TransactionType.INCOME };
-      categoriesRepository.findByUserId.mockResolvedValue([incomeCategory]);
+      categoriesRepository.findByUserId.mockResolvedValue([
+        incomeCategory,
+      ] as CategoryArrayWithRelations);
 
       const result = await service.findAll(userId, TransactionType.INCOME);
 
@@ -260,11 +274,13 @@ describe('CategoriesService', () => {
         TransactionType.INCOME,
       );
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(TransactionType.INCOME);
+      expect(result[0]?.type).toBe(TransactionType.INCOME);
     });
 
     it('should filter by transaction type (EXPENSE)', async () => {
-      categoriesRepository.findByUserId.mockResolvedValue([mockCategory]);
+      categoriesRepository.findByUserId.mockResolvedValue([
+        mockCategory,
+      ] as CategoryArrayWithRelations);
 
       const result = await service.findAll(userId, TransactionType.EXPENSE);
 
@@ -273,7 +289,7 @@ describe('CategoriesService', () => {
         TransactionType.EXPENSE,
       );
       expect(result).toHaveLength(1);
-      expect(result[0].type).toBe(TransactionType.EXPENSE);
+      expect(result[0]?.type).toBe(TransactionType.EXPENSE);
     });
 
     it('should return empty array when no categories', async () => {
@@ -285,7 +301,9 @@ describe('CategoriesService', () => {
     });
 
     it("should only return user's own categories", async () => {
-      categoriesRepository.findByUserId.mockResolvedValue([mockCategory]);
+      categoriesRepository.findByUserId.mockResolvedValue([
+        mockCategory,
+      ] as CategoryArrayWithRelations);
 
       const result = await service.findAll(userId);
 
@@ -299,7 +317,9 @@ describe('CategoriesService', () => {
 
   describe('findOne', () => {
     it('should successfully find category by ID', async () => {
-      categoriesRepository.findUnique.mockResolvedValue(mockCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        mockCategory as CategoryWithRelations,
+      );
 
       const result = await service.findOne(userId, mockCategory.id);
 
@@ -322,7 +342,9 @@ describe('CategoriesService', () => {
 
     it('should throw NotFoundException for deleted category', async () => {
       const deletedCategory = { ...mockCategory, deletedAt: new Date() };
-      categoriesRepository.findUnique.mockResolvedValue(deletedCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        deletedCategory as CategoryWithRelations,
+      );
 
       await expect(service.findOne(userId, mockCategory.id)).rejects.toThrow(
         NotFoundException,
@@ -331,7 +353,9 @@ describe('CategoriesService', () => {
 
     it("should throw NotFoundException for other user's category", async () => {
       const otherUserCategory = { ...mockCategory, userId: 'other-user-id' };
-      categoriesRepository.findUnique.mockResolvedValue(otherUserCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        otherUserCategory as CategoryWithRelations,
+      );
 
       await expect(service.findOne(userId, mockCategory.id)).rejects.toThrow(
         NotFoundException,
@@ -347,10 +371,14 @@ describe('CategoriesService', () => {
 
     it('should successfully update category', async () => {
       const updatedCategory = { ...mockCategory, name: updateDto.name };
-      categoriesRepository.findUnique.mockResolvedValue(mockCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        mockCategory as CategoryWithRelations,
+      );
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(0);
       categoriesRepository.checkCategoryExists.mockResolvedValue(false);
-      categoriesRepository.update.mockResolvedValue(updatedCategory);
+      categoriesRepository.update.mockResolvedValue(
+        updatedCategory as UpdatedCategory,
+      );
 
       const result = await service.update(userId, mockCategory.id, updateDto);
 
@@ -375,7 +403,9 @@ describe('CategoriesService', () => {
         parentCategoryId: mockCategory.id,
       };
 
-      categoriesRepository.findUnique.mockResolvedValue(mockCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        mockCategory as CategoryWithRelations,
+      );
 
       await expect(
         service.update(userId, mockCategory.id, updateWithSelfDto),
@@ -398,12 +428,12 @@ describe('CategoriesService', () => {
       };
 
       categoriesRepository.findUnique
-        .mockResolvedValueOnce(mockCategory)
-        .mockResolvedValueOnce(subcategoryWithParent)
-        .mockResolvedValueOnce(subcategoryWithParent)
-        .mockResolvedValueOnce(mockCategory)
-        .mockResolvedValueOnce(subcategoryWithParent)
-        .mockResolvedValueOnce(subcategoryWithParent);
+        .mockResolvedValueOnce(mockCategory as CategoryWithRelations)
+        .mockResolvedValueOnce(subcategoryWithParent as CategoryWithRelations)
+        .mockResolvedValueOnce(subcategoryWithParent as CategoryWithRelations)
+        .mockResolvedValueOnce(mockCategory as CategoryWithRelations)
+        .mockResolvedValueOnce(subcategoryWithParent as CategoryWithRelations)
+        .mockResolvedValueOnce(subcategoryWithParent as CategoryWithRelations);
 
       await expect(
         service.update(userId, mockCategory.id, updateWithAncestorDto),
@@ -424,8 +454,8 @@ describe('CategoriesService', () => {
       };
 
       categoriesRepository.findUnique
-        .mockResolvedValueOnce(mockCategory)
-        .mockResolvedValueOnce(otherUserCategory);
+        .mockResolvedValueOnce(mockCategory as CategoryWithRelations)
+        .mockResolvedValueOnce(otherUserCategory as CategoryWithRelations);
 
       await expect(
         service.update(userId, mockCategory.id, updateWithParentDto),
@@ -443,8 +473,8 @@ describe('CategoriesService', () => {
       };
 
       categoriesRepository.findUnique
-        .mockResolvedValueOnce(mockCategory)
-        .mockResolvedValueOnce(incomeParent);
+        .mockResolvedValueOnce(mockCategory as CategoryWithRelations)
+        .mockResolvedValueOnce(incomeParent as CategoryWithRelations);
 
       await expect(
         service.update(userId, mockCategory.id, updateWithParentDto),
@@ -452,7 +482,9 @@ describe('CategoriesService', () => {
     });
 
     it('should throw ConflictException when name/type/parent combination exists', async () => {
-      categoriesRepository.findUnique.mockResolvedValue(mockCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        mockCategory as CategoryWithRelations,
+      );
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(0);
       categoriesRepository.checkCategoryExists.mockResolvedValue(true);
 
@@ -467,7 +499,9 @@ describe('CategoriesService', () => {
         type: TransactionType.INCOME,
       };
 
-      categoriesRepository.findUnique.mockResolvedValue(mockCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        mockCategory as CategoryWithRelations,
+      );
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(1);
 
       await expect(
@@ -492,10 +526,10 @@ describe('CategoriesService', () => {
       };
 
       categoriesRepository.findUnique
-        .mockResolvedValueOnce(categoryWithParent)
-        .mockResolvedValueOnce(incomeParent)
-        .mockResolvedValueOnce(categoryWithParent)
-        .mockResolvedValueOnce(incomeParent);
+        .mockResolvedValueOnce(categoryWithParent as CategoryWithRelations)
+        .mockResolvedValueOnce(incomeParent as CategoryWithRelations)
+        .mockResolvedValueOnce(categoryWithParent as CategoryWithRelations)
+        .mockResolvedValueOnce(incomeParent as CategoryWithRelations);
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(0);
 
       await expect(
@@ -509,10 +543,14 @@ describe('CategoriesService', () => {
 
   describe('remove', () => {
     it('should successfully delete category', async () => {
-      categoriesRepository.findUnique.mockResolvedValue(mockCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        mockCategory as CategoryWithRelations,
+      );
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(0);
       categoriesRepository.countTransactionsByCategoryId.mockResolvedValue(0);
-      categoriesRepository.softDelete.mockResolvedValue(mockCategory);
+      categoriesRepository.softDelete.mockResolvedValue(
+        mockCategory as UpdatedCategory,
+      );
 
       await service.remove(userId, mockCategory.id);
 
@@ -533,7 +571,9 @@ describe('CategoriesService', () => {
     });
 
     it('should throw ConflictException when category has subcategories', async () => {
-      categoriesRepository.findUnique.mockResolvedValue(mockCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        mockCategory as CategoryWithRelations,
+      );
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(2);
 
       await expect(service.remove(userId, mockCategory.id)).rejects.toThrow(
@@ -545,7 +585,9 @@ describe('CategoriesService', () => {
     });
 
     it('should throw ConflictException when category has transactions', async () => {
-      categoriesRepository.findUnique.mockResolvedValue(mockCategory);
+      categoriesRepository.findUnique.mockResolvedValue(
+        mockCategory as CategoryWithRelations,
+      );
       categoriesRepository.countSubcategoriesByParentId.mockResolvedValue(0);
       categoriesRepository.countTransactionsByCategoryId.mockResolvedValue(5);
 

@@ -26,23 +26,15 @@ import {
   TransactionStatisticsGroupBy,
 } from './dto/transaction-statistics-query.dto';
 import { CurrencyCode, TransactionType } from '../../generated/prisma/enums';
-import { Category } from '../../generated/prisma/client';
+import { Category, Prisma } from '../../generated/prisma/client';
 import { ERROR_MESSAGES } from '../core/constants/error-messages.constant';
+
+import Mocked = jest.Mocked;
 
 describe('TransactionsService', () => {
   let service: TransactionsService;
-  let transactionsRepository: {
-    findUnique: jest.Mock;
-    findMany: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    softDelete: jest.Mock;
-    count: jest.Mock;
-    aggregate: jest.Mock;
-  };
-  let categoriesRepository: {
-    findUnique: jest.Mock;
-  };
+  let transactionsRepository: Mocked<TransactionsRepository>;
+  let categoriesRepository: Mocked<CategoriesRepository>;
 
   const userId = 'user-id';
   const categoryId = 'category-id';
@@ -62,7 +54,7 @@ describe('TransactionsService', () => {
     userId,
     categoryId,
     type: TransactionType.EXPENSE,
-    amount: 100.5,
+    amount: new Prisma.Decimal(100.5),
     currencyCode: CurrencyCode.USD,
     date: new Date('2024-01-01'),
     description: 'Test transaction',
