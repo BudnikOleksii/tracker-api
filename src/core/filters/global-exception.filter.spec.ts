@@ -13,14 +13,12 @@ import { Prisma } from '../../../generated/prisma/client';
 import { GlobalExceptionFilter } from './global-exception.filter';
 import { ERROR_MESSAGES } from '../constants/error-messages.constant';
 
-/* eslint-disable @typescript-eslint/unbound-method */
-
 describe('GlobalExceptionFilter', () => {
   let filter: GlobalExceptionFilter;
   let mockArgumentsHost: ArgumentsHost;
   let mockRequest: Request;
   let mockResponse: Response;
-  let loggerErrorSpy: jest.SpyInstance;
+  let loggerErrorSpy: ReturnType<typeof jest.spyOn>;
 
   beforeEach(() => {
     filter = new GlobalExceptionFilter();
@@ -43,7 +41,11 @@ describe('GlobalExceptionFilter', () => {
       }),
     } as unknown as ArgumentsHost;
 
-    loggerErrorSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation();
+    loggerErrorSpy = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(
+        (_message: string, _stack?: string, _context?: unknown) => undefined,
+      );
   });
 
   describe('catch', () => {

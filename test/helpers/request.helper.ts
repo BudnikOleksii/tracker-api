@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-standalone-expect */
 import { expect } from '@jest/globals';
 import { INestApplication } from '@nestjs/common';
 import request, { Response } from 'supertest';
