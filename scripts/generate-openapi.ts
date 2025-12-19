@@ -10,7 +10,6 @@ async function generateOpenApiSpec() {
   const app = await NestFactory.create(AppModule, { logger: false });
 
   const config = createSwaggerDocumentBuilder().build();
-
   const document = SwaggerModule.createDocument(app, config);
   const outputPath = join(__dirname, '..', 'openapi.json');
 

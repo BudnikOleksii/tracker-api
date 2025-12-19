@@ -12,6 +12,8 @@ export interface AppConfig {
   host: string;
   allowedOrigins: string[];
   swaggerPath: string;
+  globalPrefix: string;
+  apiVersion: string;
 }
 
 export const appConfigSchema = Joi.object<AppConfig>({
@@ -22,4 +24,6 @@ export const appConfigSchema = Joi.object<AppConfig>({
   host: Joi.string().default('localhost'),
   allowedOrigins: Joi.array().items(Joi.string()),
   swaggerPath: Joi.string().default('/api/docs'),
+  globalPrefix: Joi.string().default('api'),
+  apiVersion: Joi.string().default('1'),
 });

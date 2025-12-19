@@ -11,6 +11,8 @@ export default registerAs('app', (): AppConfig => {
       origin.trim(),
     ) || ['http://localhost:3000'],
     swaggerPath: process.env.SWAGGER_PATH || '/api/docs',
+    globalPrefix: process.env.GLOBAL_PREFIX || 'api',
+    apiVersion: process.env.API_VERSION || '1',
   };
 
   const validationResult = appConfigSchema.validate(configValues, {
