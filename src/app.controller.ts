@@ -1,15 +1,30 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { type Response } from 'express';
-import { readFileSync } from 'fs';
+import { readFile } from 'fs/promises';
 import { join } from 'path';
 
 import { AppService } from './app.service';
 
 @ApiTags('app')
 @Controller()
-export class AppController {
+export class AppController implements OnModuleInit {
+  private openApiContent: string | null = null;
+
   constructor(private readonly appService: AppService) {}
+
+  async onModuleInit(): Promise<void> {
+    const openApiPath = join(process.cwd(), 'openapi.json');
+    try {
+      this.openApiContent = await readFile(openApiPath, 'utf-8');
+    } catch {
+      //
+    }
+  }
 
   @Get('health')
   @ApiOperation({
@@ -39,17 +54,18 @@ export class AppController {
       },
     },
   })
-  getOpenApiSpec(@Res() res: Response): void {
-    const openApiPath = join(process.cwd(), 'openapi.json');
-    try {
-      const openApiContent = readFileSync(openApiPath, 'utf-8');
-      res.setHeader('Content-Type', 'application/json');
-      res.send(openApiContent);
-    } catch {
-      res.status(404).json({
-        error: 'OpenAPI specification not found',
-        message: 'Please generate the specifications first',
-      });
+  @ApiResponse({
+    status: 404,
+    description:
+      'OpenAPI specification not found. Please generate the specifications first.',
+  })
+  getOpenApiSpec(): Record<string, unknown> {
+    if (!this.openApiContent) {
+      throw new NotFoundException(
+        'OpenAPI specification not found. Please generate the specifications first.',
+      );
     }
+
+    return JSON.parse(this.openApiContent) as Record<string, unknown>;
   }
 }
