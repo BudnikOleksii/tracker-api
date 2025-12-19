@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
@@ -11,6 +11,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(AppConfigService);
+
+  app.setGlobalPrefix(configService.app.globalPrefix);
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: configService.app.apiVersion,
+  });
 
   app.use(cookieParser());
 

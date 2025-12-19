@@ -18,7 +18,6 @@ import {
   TransactionsAggregateGroupItem,
 } from './repositories/transactions.repository';
 import { CategoriesRepository } from '../categories/repositories/categories.repository';
-import { CacheService } from '../cache/cache.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { TransactionQueryDto } from './dto/transaction-query.dto';

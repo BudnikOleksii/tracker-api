@@ -12,7 +12,6 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CacheService } from '../cache/cache.service';
 import { UsersRepository } from './repositories/users.repository';
-import { CacheService } from '../cache/cache.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import {
   UserRole,
