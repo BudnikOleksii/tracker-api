@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Logger,
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
@@ -13,16 +14,22 @@ import { AppService } from './app.service';
 @ApiTags('app')
 @Controller()
 export class AppController implements OnModuleInit {
-  private openApiContent: string | null = null;
+  private readonly logger = new Logger(AppController.name);
+  private openApiContent: Record<string, unknown> | null = null;
 
   constructor(private readonly appService: AppService) {}
 
   async onModuleInit(): Promise<void> {
     const openApiPath = join(process.cwd(), 'openapi.json');
     try {
-      this.openApiContent = await readFile(openApiPath, 'utf-8');
+      const content = await readFile(openApiPath, 'utf-8');
+
+      this.openApiContent = JSON.parse(content) as Record<string, unknown>;
     } catch {
-      //
+      this.openApiContent = null;
+      this.logger.warn(
+        `[AppController] Open api content not found: ${openApiPath}`,
+      );
     }
   }
 
@@ -59,13 +66,13 @@ export class AppController implements OnModuleInit {
     description:
       'OpenAPI specification not found. Please generate the specifications first.',
   })
-  getOpenApiSpec(): Record<string, unknown> {
+  getOpenApiSpec() {
     if (!this.openApiContent) {
       throw new NotFoundException(
         'OpenAPI specification not found. Please generate the specifications first.',
       );
     }
 
-    return JSON.parse(this.openApiContent) as Record<string, unknown>;
+    return this.openApiContent;
   }
 }
