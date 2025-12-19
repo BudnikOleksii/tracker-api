@@ -17,6 +17,7 @@ import {
   TransactionsAggregateGroupItem,
 } from './repositories/transactions.repository';
 import { CategoriesRepository } from '../categories/repositories/categories.repository';
+import { CacheService } from '../cache/cache.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
@@ -86,6 +87,13 @@ describe('TransactionsService', () => {
       findUnique: jest.fn(),
     };
 
+    const mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      delPattern: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         TransactionsService,
@@ -96,6 +104,10 @@ describe('TransactionsService', () => {
         {
           provide: CategoriesRepository,
           useValue: mockCategoriesRepository,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
         },
       ],
     }).compile();

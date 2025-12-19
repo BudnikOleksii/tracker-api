@@ -15,6 +15,7 @@ import {
 
 import { CategoriesService } from './categories.service';
 import { CategoriesRepository } from './repositories/categories.repository';
+import { CacheService } from '../cache/cache.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { TransactionType } from '../../generated/prisma/enums';
@@ -80,12 +81,23 @@ describe('CategoriesService', () => {
       countTransactionsByCategoryId: jest.fn(),
     };
 
+    const mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      delPattern: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CategoriesService,
         {
           provide: CategoriesRepository,
           useValue: mockCategoriesRepository,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
         },
       ],
     }).compile();

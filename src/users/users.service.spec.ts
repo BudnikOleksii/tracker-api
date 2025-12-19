@@ -11,6 +11,7 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 import { UsersService } from './users.service';
 import { UsersRepository } from './repositories/users.repository';
+import { CacheService } from '../cache/cache.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import {
   UserRole,
@@ -50,12 +51,23 @@ describe('UsersService', () => {
       update: jest.fn(),
     };
 
+    const mockCacheService = {
+      get: jest.fn(),
+      set: jest.fn(),
+      del: jest.fn(),
+      delPattern: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         {
           provide: UsersRepository,
           useValue: mockUsersRepository,
+        },
+        {
+          provide: CacheService,
+          useValue: mockCacheService,
         },
       ],
     }).compile();
