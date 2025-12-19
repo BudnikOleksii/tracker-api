@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 
 import { CategoriesService } from './categories.service';
+import { CacheService } from '../cache/cache.service';
 import { CategoriesRepository } from './repositories/categories.repository';
 import { CacheService } from '../cache/cache.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
