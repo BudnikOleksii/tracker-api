@@ -33,6 +33,7 @@ export class UserResponseDto {
   @ApiProperty({
     description: 'Country code',
     enum: CountryCode,
+    enumName: 'CountryCode',
     example: CountryCode.US,
     nullable: true,
   })
@@ -42,6 +43,7 @@ export class UserResponseDto {
   @ApiProperty({
     description: 'Base currency code',
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     example: CurrencyCode.USD,
     nullable: true,
   })
@@ -51,6 +53,7 @@ export class UserResponseDto {
   @ApiProperty({
     description: 'User role',
     enum: UserRole,
+    enumName: 'UserRole',
     example: UserRole.USER,
   })
   @Expose()

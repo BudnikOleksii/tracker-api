@@ -24,6 +24,7 @@ export class TransactionResponseDto {
   @ApiProperty({
     description: 'Transaction type',
     enum: TransactionType,
+    enumName: 'TransactionType',
     example: TransactionType.EXPENSE,
   })
   @Expose()
@@ -39,6 +40,7 @@ export class TransactionResponseDto {
   @ApiProperty({
     description: 'Currency code',
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     example: CurrencyCode.USD,
   })
   @Expose()

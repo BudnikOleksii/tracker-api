@@ -29,6 +29,7 @@ export class RegisterDto {
   @ApiPropertyOptional({
     description: 'Country code',
     enum: CountryCode,
+    enumName: 'CountryCode',
     example: CountryCode.US,
   })
   @IsOptional()
@@ -38,6 +39,7 @@ export class RegisterDto {
   @ApiPropertyOptional({
     description: 'Base currency code',
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     example: CurrencyCode.USD,
   })
   @IsOptional()

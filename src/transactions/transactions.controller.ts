@@ -85,6 +85,7 @@ export class TransactionsController {
     name: 'type',
     required: false,
     enum: TransactionType,
+    enumName: 'TransactionType',
     description: 'Filter by transaction type',
   })
   @ApiQuery({
@@ -109,6 +110,7 @@ export class TransactionsController {
     name: 'currencyCode',
     required: false,
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     description: 'Filter by currency code',
   })
   @ApiResponse({
@@ -155,12 +157,14 @@ export class TransactionsController {
     name: 'currencyCode',
     required: false,
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     description: 'Filter by currency',
   })
   @ApiQuery({
     name: 'type',
     required: false,
     enum: TransactionType,
+    enumName: 'TransactionType',
     description: 'Filter by transaction type',
   })
   @ApiResponse({

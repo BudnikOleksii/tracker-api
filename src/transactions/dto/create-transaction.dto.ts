@@ -24,6 +24,7 @@ export class CreateTransactionDto {
   @ApiProperty({
     description: 'Transaction type',
     enum: TransactionType,
+    enumName: 'TransactionType',
     example: TransactionType.EXPENSE,
   })
   @IsEnum(TransactionType)
@@ -41,6 +42,7 @@ export class CreateTransactionDto {
   @ApiProperty({
     description: 'Currency code',
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     example: CurrencyCode.USD,
   })
   @IsEnum(CurrencyCode)

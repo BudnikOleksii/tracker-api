@@ -25,6 +25,7 @@ export class UpdateCategoryDto {
   @ApiProperty({
     description: 'Transaction type',
     enum: TransactionType,
+    enumName: 'TransactionType',
     example: TransactionType.EXPENSE,
   })
   @IsEnum(TransactionType)

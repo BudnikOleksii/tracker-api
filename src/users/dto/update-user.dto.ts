@@ -7,6 +7,7 @@ export class UpdateUserDto {
   @ApiPropertyOptional({
     description: 'Country code',
     enum: CountryCode,
+    enumName: 'CountryCode',
     example: CountryCode.US,
   })
   @IsOptional()
@@ -16,6 +17,7 @@ export class UpdateUserDto {
   @ApiPropertyOptional({
     description: 'Base currency code',
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     example: CurrencyCode.USD,
   })
   @IsOptional()
