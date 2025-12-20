@@ -35,6 +35,7 @@ export class TransactionStatisticsQueryDto {
   @ApiPropertyOptional({
     description: 'Filter by transaction type',
     enum: TransactionType,
+    enumName: 'TransactionType',
     example: TransactionType.EXPENSE,
   })
   @IsOptional()
@@ -44,6 +45,7 @@ export class TransactionStatisticsQueryDto {
   @ApiPropertyOptional({
     description: 'Filter by currency code',
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     example: CurrencyCode.USD,
   })
   @IsOptional()
@@ -53,6 +55,7 @@ export class TransactionStatisticsQueryDto {
   @ApiPropertyOptional({
     description: 'Group statistics by',
     enum: TransactionStatisticsGroupBy,
+    enumName: 'TransactionStatisticsGroupBy',
     example: TransactionStatisticsGroupBy.CATEGORY,
   })
   @IsOptional()

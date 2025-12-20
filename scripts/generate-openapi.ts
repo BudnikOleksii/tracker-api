@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
+import * as process from 'node:process';
 
 import { AppModule } from '../src/app.module';
 import { createSwaggerDocumentBuilder } from '../src/shared/utils/swagger.util';
@@ -18,6 +19,7 @@ async function generateOpenApiSpec() {
   console.warn(`OpenAPI specification generated at: ${outputPath}`);
 
   await app.close();
+  process.exit(0);
 }
 
 generateOpenApiSpec().catch((error) => {

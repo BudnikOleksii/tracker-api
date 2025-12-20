@@ -65,6 +65,7 @@ export class CategoriesController {
     name: 'type',
     required: false,
     enum: TransactionType,
+    enumName: 'TransactionType',
     description: 'Filter by transaction type',
   })
   @ApiResponse({

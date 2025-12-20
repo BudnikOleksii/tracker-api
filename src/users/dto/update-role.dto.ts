@@ -7,6 +7,7 @@ export class UpdateRoleDto {
   @ApiProperty({
     description: 'User role',
     enum: UserRole,
+    enumName: 'UserRole',
     example: UserRole.USER,
   })
   @IsEnum(UserRole)

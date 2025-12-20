@@ -28,6 +28,7 @@ export class TransactionQueryDto {
   @ApiPropertyOptional({
     description: 'Filter by transaction type',
     enum: TransactionType,
+    enumName: 'TransactionType',
     example: TransactionType.EXPENSE,
   })
   @IsOptional()
@@ -46,6 +47,7 @@ export class TransactionQueryDto {
   @ApiPropertyOptional({
     description: 'Filter by currency code',
     enum: CurrencyCode,
+    enumName: 'CurrencyCode',
     example: CurrencyCode.USD,
   })
   @IsOptional()
