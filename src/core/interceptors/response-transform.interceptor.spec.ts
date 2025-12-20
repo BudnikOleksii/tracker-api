@@ -18,6 +18,7 @@ describe('ResponseTransformInterceptor', () => {
     interceptor = new ResponseTransformInterceptor();
 
     mockHandler = jest.fn();
+    jest.spyOn(Reflect, 'getMetadata').mockReturnValue(undefined);
 
     mockExecutionContext = {
       switchToHttp: jest.fn(),
@@ -39,7 +40,6 @@ describe('ResponseTransformInterceptor', () => {
     it('should transform successful response with data', async () => {
       const testData = { id: '1', name: 'Test' };
       jest.spyOn(mockCallHandler, 'handle').mockReturnValue(of(testData));
-      jest.spyOn(Reflect, 'getMetadata').mockReturnValue(undefined);
 
       const result = interceptor.intercept(
         mockExecutionContext,
@@ -60,7 +60,6 @@ describe('ResponseTransformInterceptor', () => {
 
     it('should transform response with null data', async () => {
       jest.spyOn(mockCallHandler, 'handle').mockReturnValue(of(null));
-      jest.spyOn(Reflect, 'getMetadata').mockReturnValue(undefined);
 
       const result = interceptor.intercept(
         mockExecutionContext,
@@ -78,7 +77,6 @@ describe('ResponseTransformInterceptor', () => {
 
     it('should transform response with undefined data', async () => {
       jest.spyOn(mockCallHandler, 'handle').mockReturnValue(of(undefined));
-      jest.spyOn(Reflect, 'getMetadata').mockReturnValue(undefined);
 
       const result = interceptor.intercept(
         mockExecutionContext,
@@ -97,7 +95,6 @@ describe('ResponseTransformInterceptor', () => {
     it('should transform response with array data', async () => {
       const testData = [{ id: '1' }, { id: '2' }];
       jest.spyOn(mockCallHandler, 'handle').mockReturnValue(of(testData));
-      jest.spyOn(Reflect, 'getMetadata').mockReturnValue(undefined);
 
       const result = interceptor.intercept(
         mockExecutionContext,
@@ -116,7 +113,6 @@ describe('ResponseTransformInterceptor', () => {
     it('should transform response with string data', async () => {
       const testData = 'test string';
       jest.spyOn(mockCallHandler, 'handle').mockReturnValue(of(testData));
-      jest.spyOn(Reflect, 'getMetadata').mockReturnValue(undefined);
 
       const result = interceptor.intercept(
         mockExecutionContext,
@@ -135,7 +131,6 @@ describe('ResponseTransformInterceptor', () => {
     it('should generate ISO timestamp', async () => {
       const testData = { test: 'data' };
       jest.spyOn(mockCallHandler, 'handle').mockReturnValue(of(testData));
-      jest.spyOn(Reflect, 'getMetadata').mockReturnValue(undefined);
 
       const result = interceptor.intercept(
         mockExecutionContext,
@@ -154,7 +149,6 @@ describe('ResponseTransformInterceptor', () => {
       const handleSpy = jest
         .spyOn(mockCallHandler, 'handle')
         .mockReturnValue(of(testData));
-      jest.spyOn(Reflect, 'getMetadata').mockReturnValue(undefined);
 
       interceptor.intercept(mockExecutionContext, mockCallHandler);
 

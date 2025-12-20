@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { PATH_METADATA } from '@nestjs/common/constants';
 
 export interface Response<T> {
   success: boolean;
@@ -22,7 +23,7 @@ export class ResponseTransformInterceptor<T>
     next: CallHandler,
   ): Observable<Response<T> | T> {
     const handler = context.getHandler();
-    const routePath = Reflect.getMetadata('path', handler) as
+    const routePath = Reflect.getMetadata(PATH_METADATA, handler) as
       | string
       | undefined;
 
