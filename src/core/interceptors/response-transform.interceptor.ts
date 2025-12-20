@@ -15,12 +15,21 @@ export interface Response<T> {
 
 @Injectable()
 export class ResponseTransformInterceptor<T>
-  implements NestInterceptor<T, Response<T>>
+  implements NestInterceptor<T, Response<T> | T>
 {
   intercept(
-    _context: ExecutionContext,
+    context: ExecutionContext,
     next: CallHandler,
-  ): Observable<Response<T>> {
+  ): Observable<Response<T> | T> {
+    const handler = context.getHandler();
+    const routePath = Reflect.getMetadata('path', handler) as
+      | string
+      | undefined;
+
+    if (routePath?.endsWith('.json')) {
+      return next.handle() as Observable<T>;
+    }
+
     return next.handle().pipe(
       map((data: T) => ({
         success: true,
